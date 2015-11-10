@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <ImageButton
+        android:id="@+id/btn_upvote"
+        style="?attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/arrow_up"
+        android:layout_toLeftOf="@+id/btn_downvote"/>
+
+    <ImageButton
+        android:id="@+id/btn_downvote"
+        style="?attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/arrow_down"
+        android:layout_toLeftOf="@+id/menu_overflow"/>
+
+    <ImageButton
+        android:id="@+id/menu_overflow"
+        style="?attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/dots_vertical"
+        android:layout_alignParentRight="true"/>
+
+    <TextView
+        android:id="@+id/gold_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/pink_rounded_rectangle"
+        android:drawableLeft="@drawable/gold_star"
+        android:drawablePadding="4dp"
+        android:text="2"
+        android:textColor="#ffffff"/>
+</RelativeLayout>
