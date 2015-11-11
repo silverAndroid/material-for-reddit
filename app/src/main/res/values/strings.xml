@@ -19,6 +19,7 @@
     <string name="prompt_password">Password (optional)</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Sign in</string>
+    <string name="action_log_in">Log in</string>
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
@@ -36,4 +37,8 @@
     <string name="dummy_comment">
         <div class="md"><p><b><em>""Damn it Peralta, it\'s a tip, not a life hack.""</em></b></p></div>
     </string>
+    <string name="permission_title">Request for Permission</string>
+    <string name="permission_message">Material for Reddit would like to:\n\u2022 Access the list of subreddits you
+        moderate, contribute to, and subscribe to.\n\u2022 Maintain this access indefinitely (or until manually
+        revoked).\n\nIt will not be able to access your password.</string>
 </resources>
