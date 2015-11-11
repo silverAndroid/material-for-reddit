@@ -1,8 +1,11 @@
 package com.reddit.material;
 
+import android.content.Context;
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.text.format.DateUtils;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,10 +17,12 @@ import java.util.ArrayList;
  */
 public class CommentsAdapter extends RecyclerView.Adapter {
 
+    private final Context context;
     private Post post;
     private ArrayList<Comment> comments;
 
-    public CommentsAdapter(Post post) {
+    public CommentsAdapter(Post post, Context context) {
+        this.context = context;
         comments = new ArrayList<>();
         this.post = post;
     }
@@ -93,10 +98,25 @@ public class CommentsAdapter extends RecyclerView.Adapter {
             holder.gilded.setVisibility(post.getGilded() == 0 ? View.GONE : View.VISIBLE);
             holder.gilded.setText(String.format("%d", post.getGilded()));
             holder.flair.setText(post.getLinkFlairText());
+
+            if (holder.gilded.getVisibility() == View.VISIBLE) {
+                holder.card.setCardBackgroundColor(Color.rgb(253, 221, 98));
+                int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, context.getResources()
+                        .getDisplayMetrics());
+                holder.card.setContentPadding(padding, padding, padding, padding);
+            } else if (post.isStickied()) {
+                holder.card.setCardBackgroundColor(Color.rgb(164, 208, 95));
+                int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, context.getResources()
+                        .getDisplayMetrics());
+                holder.card.setContentPadding(padding, padding, padding, padding);
+            } else {
+                holder.card.setCardBackgroundColor(Color.rgb(245, 243, 242));
+                holder.card.setContentPadding(0, 0, 0, 0);
+            }
         } else if (holderParent instanceof CommentViewHolder) {
             CommentViewHolder holder = (CommentViewHolder) holderParent;
             holder.username.setText(comments.get(position - 1).getAuthor());
-            holder.text.setText(Html.fromHtml(comments.get(position - 1).getBodyHTML()));
+            holder.text.setText(comments.get(position - 1).getBody());
             holder.numPoints.setText(String.format("%d pts", comments.get(position - 1).getScore()));
             holder.time.setText(DateUtils.getRelativeTimeSpanString(comments.get(position - 1).getCreatedUTC() * 1000,
                     System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS));

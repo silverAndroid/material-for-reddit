@@ -28,7 +28,7 @@ public class CommentsActivity extends AppCompatActivity {
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.rv);
         recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
-        recyclerView.setAdapter(adapter = new CommentsAdapter(post));
+        recyclerView.setAdapter(adapter = new CommentsAdapter(post, getBaseContext()));
         ConnectionSingleton.getInstance().getPostData(post.getPermalink());
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
