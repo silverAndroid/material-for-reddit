@@ -15,6 +15,7 @@ public class ConstantMap {
     private static final String JPEG = ".jpg";
     private static final String GIF = ".gif";
     private static final String GIFV = ".gifv";
+    private static final String USER_AGENT = "User-Agent: android:com.reddit.material:v1.0.0 (by /u/silverAndroid)";
     private static HashMap<String, String> constantMap;
     private static ConstantMap instance;
 
@@ -27,6 +28,7 @@ public class ConstantMap {
         constantMap.put(PNG, null);
         constantMap.put(JPEG, null);
         constantMap.put(GIF, null);
+        constantMap.put("user_agent", USER_AGENT);
     }
 
     public static ConstantMap getInstance() {
@@ -36,7 +38,8 @@ public class ConstantMap {
     }
 
     public boolean isImage(String string) {
-        return string.contains(PNG) || string.contains(JPEG) || string.contains(BMP) || string.contains(IMGUR);
+        return string.contains(PNG) || string.contains(JPEG) || string.contains(BMP) || string.contains(IMGUR) ||
+                string.contains(FLICKR);
     }
 
     public boolean isGIF(String string) {
@@ -45,5 +48,9 @@ public class ConstantMap {
 
     public HashMap<String, String> getConstantMap() {
         return constantMap;
+    }
+
+    public String getConstant(String key) {
+        return constantMap.get(key);
     }
 }
