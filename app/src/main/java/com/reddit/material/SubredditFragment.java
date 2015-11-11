@@ -55,7 +55,12 @@ public class SubredditFragment extends Fragment {
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refresh();
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        refresh();
+                    }
+                }.run();
             }
         });
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.rv);
@@ -69,7 +74,6 @@ public class SubredditFragment extends Fragment {
     public void refresh() {
         adapter.clearPosts();
         ConnectionSingleton.getInstance().getSubredditData(getArguments().getString("r/"));
-        refresh.setRefreshing(false);
     }
 
     public SubredditAdapter getAdapter() {
