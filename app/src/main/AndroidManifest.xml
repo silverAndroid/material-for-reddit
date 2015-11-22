@@ -19,11 +19,15 @@
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable"
+                android:value="com.reddit.material.SearchActivity"/>
         </activity>
         <activity
             android:name=".VideoActivity"
             android:label="@string/title_activity_video"
-            android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -32,7 +36,6 @@
         <activity
             android:name=".ImageActivity"
             android:label="@string/title_activity_image"
-            android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -42,6 +45,19 @@
             android:name=".CommentsActivity"
             android:label="@string/title_activity_comments"
             android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".YouTubeActivity"
+            android:label="@string/title_activity_you_tube"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".SearchActivity"
+            android:label="@string/title_activity_search"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH"/>
+            </intent-filter>
         </activity>
     </application>
 
