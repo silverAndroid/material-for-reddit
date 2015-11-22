@@ -8,8 +8,8 @@ import android.preference.PreferenceManager;
  */
 public class Authentication {
 
-    private final Context context;
     private static Authentication instance;
+    private final Context context;
 
     private Authentication(Context context) {
         this.context = context;
@@ -24,14 +24,27 @@ public class Authentication {
     }
 
     public boolean isLoggedIn() {
-        return PreferenceManager.getDefaultSharedPreferences(context).contains("modhash");
+        return PreferenceManager.getDefaultSharedPreferences(context).contains("accessToken");
     }
 
-    public String getModHash() {
-        return PreferenceManager.getDefaultSharedPreferences(context).getString("modhash", "");
+    public String getAccessToken() {
+        return PreferenceManager.getDefaultSharedPreferences(context).getString("accessToken", "");
     }
 
-    public String getCookie() {
-        return PreferenceManager.getDefaultSharedPreferences(context).getString("cookie", "");
+    public void saveAccessToken(String accessToken) {
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putString("accessToken", accessToken).commit();
+    }
+
+    public String getRefreshToken() {
+        return PreferenceManager.getDefaultSharedPreferences(context).getString("refreshToken", "");
+    }
+
+    public void saveRefreshToken(String refreshToken) {
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putString("refreshToken", refreshToken).commit();
+    }
+
+    public void logout() {
+        PreferenceManager.getDefaultSharedPreferences(context).edit().remove("accessToken").commit();
+        PreferenceManager.getDefaultSharedPreferences(context).edit().remove("refreshToken").commit();
     }
 }
