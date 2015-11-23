@@ -1,15 +1,21 @@
 package com.reddit.material;
 
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
+import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.Toast;
+
+import com.facebook.common.util.UriUtil;
 
 import java.util.ArrayList;
 
@@ -19,31 +25,35 @@ import java.util.ArrayList;
 public class SubredditAdapter extends RecyclerView.Adapter<PostViewHolder> {
 
     private final ArrayList<Post> posts;
-    private final Context context;
+    private final Activity activity;
 
-    public SubredditAdapter(Context context) {
-        this.context = context;
+    public SubredditAdapter(Activity activity) {
+        this.activity = activity;
         posts = new ArrayList<>();
     }
 
     @Override
     public PostViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_thread_subreddit, parent, false);
-        return new PostViewHolder(v, context);
+        return new PostViewHolder(v, activity);
     }
 
     @Override
-    public void onBindViewHolder(PostViewHolder holder, int position) {
+    public void onBindViewHolder(final PostViewHolder holder, int position) {
         final Post post = posts.get(position);
         String imageURL;
+        Uri nsfwPath = new Uri.Builder()
+                .scheme(UriUtil.LOCAL_RESOURCE_SCHEME)
+                .path(String.valueOf(R.drawable.nsfw_reddit_icon))
+                .build();
         if (post.getPreviewImageURL() == null) {
             if (post.getURL() == null) {
                 holder.image.setVisibility(View.GONE);
                 holder.loading.setVisibility(View.GONE);
             } else {
-                holder.setImageURL(imageURL = post.getURL());
+                holder.setURL(imageURL = post.getURL());
                 if (post.isOver18()) {
-                    holder.image.setImageResource(R.drawable.nsfw_reddit_icon);
+                    holder.image.setImageURI(nsfwPath);
                     holder.loading.setVisibility(View.GONE);
                     holder.nsfwTag.setVisibility(View.VISIBLE);
                 } else {
@@ -59,9 +69,9 @@ public class SubredditAdapter extends RecyclerView.Adapter<PostViewHolder> {
                 }
             }
         } else {
-            holder.setImageURL(post.getURL());
+            holder.setURL(post.getURL());
             if (post.isOver18()) {
-                holder.image.setImageResource(R.drawable.nsfw_reddit_icon);
+                holder.image.setImageURI(nsfwPath);
                 holder.loading.setVisibility(View.GONE);
                 holder.nsfwTag.setVisibility(View.VISIBLE);
             } else {
@@ -89,15 +99,53 @@ public class SubredditAdapter extends RecyclerView.Adapter<PostViewHolder> {
         holder.gilded.setVisibility(post.getGilded() == 0 ? View.GONE : View.VISIBLE);
         holder.gilded.setText(String.format("%d", post.getGilded()));
         holder.flair.setText(post.getLinkFlairText());
+        if (!post.getSelfText().equals("")) {
+            holder.selfText.setMaxLines(3);
+            holder.selfText.setEllipsize(TextUtils.TruncateAt.END);
+            holder.selfText.setVisibility(View.VISIBLE);
+            holder.selfText.setText(post.getSelfText());
+        } else
+            holder.selfText.setVisibility(View.GONE);
+
+        final ImageButton upvote = holder.upvote;
+        final ImageButton downvote = holder.downvote;
+
+        upvote.setSelected(post.getVote() == 1);
+        upvote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!Authentication.getInstance().isLoggedIn())
+                    Toast.makeText(activity, "You must be logged in to vote!", Toast.LENGTH_SHORT).show();
+                else {
+                    upvote.setSelected(!upvote.isSelected());
+                    downvote.setSelected(false);
+                    post.vote(upvote.isSelected() ? 1 : 0);
+                }
+            }
+        });
+
+        downvote.setSelected(post.getVote() == -1);
+        downvote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!Authentication.getInstance().isLoggedIn())
+                    Toast.makeText(activity, "You must be logged in to vote!", Toast.LENGTH_SHORT).show();
+                else {
+                    downvote.setSelected(!downvote.isSelected());
+                    upvote.setSelected(false);
+                    post.vote(downvote.isSelected() ? -1 : 0);
+                }
+            }
+        });
 
         if (holder.gilded.getVisibility() == View.VISIBLE) {
             holder.card.setCardBackgroundColor(Color.rgb(253, 221, 98));
-            int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, context.getResources()
+            int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, activity.getResources()
                     .getDisplayMetrics());
             holder.card.setContentPadding(padding, padding, padding, padding);
         } else if (post.isStickied()) {
             holder.card.setCardBackgroundColor(Color.rgb(164, 208, 95));
-            int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, context.getResources()
+            int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, activity.getResources()
                     .getDisplayMetrics());
             holder.card.setContentPadding(padding, padding, padding, padding);
         } else {
@@ -105,12 +153,14 @@ public class SubredditAdapter extends RecyclerView.Adapter<PostViewHolder> {
             holder.card.setContentPadding(0, 0, 0, 0);
         }
 
+        holder.reply.setVisibility(View.GONE);
+
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(context, CommentsActivity.class);
+                Intent intent = new Intent(activity, CommentsActivity.class);
                 intent.putExtra("post", post);
-                context.startActivity(intent);
+                activity.startActivity(intent);
             }
         });
     }

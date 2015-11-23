@@ -16,9 +16,11 @@ public class Subreddit implements Comparable<Subreddit> {
     private final boolean over18;
     private final int subscribers;
     private final long createdUTC;
+    private final String id;
 
-    public Subreddit(String name, String description, String publicDescription, int commentScoreHideMins, String
-            subredditVisibility, boolean over18, int subscribers, long createdUTC) {
+    public Subreddit(String name, String id, String description, String publicDescription, int commentScoreHideMins,
+                     String subredditVisibility, boolean over18, int subscribers, long createdUTC) {
+        this.id = id;
         this.name = name.toLowerCase();
         this.description = description;
         this.publicDescription = publicDescription;
@@ -61,8 +63,13 @@ public class Subreddit implements Comparable<Subreddit> {
         return createdUTC;
     }
 
+    public String getId() {
+        return id;
+    }
+
     @Override
     public int compareTo(@NonNull Subreddit another) {
         return getName().compareTo(another.getName());
     }
+
 }
