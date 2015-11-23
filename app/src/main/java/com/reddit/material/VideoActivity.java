@@ -5,6 +5,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.VideoView;
@@ -26,7 +27,10 @@ public class VideoActivity extends AppCompatActivity {
         String url = getIntent().getStringExtra("url");
         videoView = (VideoView) findViewById(R.id.video);
         ProgressBar loading = (ProgressBar) findViewById(R.id.loading);
-        ConnectionSingleton.getInstance().loadGIF(url, videoView, loading, ARG_URL);
+        if (ConstantMap.getInstance().isGIF(url))
+            ConnectionSingleton.getInstance().loadGIF(url, videoView, loading, ARG_URL);
+        else
+            ConnectionSingleton.getInstance().loadVideo(url, videoView, loading);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -37,6 +41,17 @@ public class VideoActivity extends AppCompatActivity {
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
