@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
+    android:id="@+id/options_view"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,27 +11,27 @@
         style="?attr/buttonBarButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/arrow_up"
-        android:layout_toLeftOf="@+id/btn_downvote"/>
+        android:layout_toLeftOf="@+id/btn_downvote"
+        android:src="@drawable/arrow_up_selector"/>
 
     <ImageButton
         android:id="@+id/btn_downvote"
         style="?attr/buttonBarButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/arrow_down"
-        android:layout_toLeftOf="@+id/menu_overflow"/>
+        android:layout_toLeftOf="@+id/menu_overflow"
+        android:src="@drawable/arrow_down_selector"/>
 
     <ImageButton
         android:id="@+id/menu_overflow"
         style="?attr/buttonBarButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/dots_vertical"
-        android:layout_alignParentRight="true"/>
+        android:layout_alignParentRight="true"
+        android:src="@drawable/dots_vertical"/>
 
     <TextView
-        android:id="@+id/gold_count"
+        android:id="@+id/gild_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -42,4 +43,14 @@
         android:drawablePadding="4dp"
         android:text="2"
         android:textColor="#ffffff"/>
+
+    <ImageButton
+        android:id="@+id/btn_reply"
+        style="?attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/reply"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/btn_upvote"
+        android:layout_toStartOf="@+id/btn_upvote"/>
 </RelativeLayout>
