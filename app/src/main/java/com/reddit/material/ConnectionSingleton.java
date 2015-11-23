@@ -3,7 +3,7 @@ package com.reddit.material;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Bitmap;
+import android.graphics.drawable.Animatable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.preference.PreferenceManager;
@@ -12,26 +12,32 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.SubMenu;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 import android.widget.VideoView;
 
-import com.davemorrissey.labs.subscaleview.ImageSource;
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.controller.BaseControllerListener;
+import com.facebook.drawee.controller.ControllerListener;
+import com.facebook.drawee.interfaces.DraweeController;
+import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.ProgressCallback;
 import com.koushikdutta.ion.Response;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
+import com.reddit.material.libraries.facebook.ZoomableDraweeView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -75,108 +81,113 @@ public class ConnectionSingleton {
 
     public void getSubredditData(String subreddit) {
         final ArrayList<Post> posts = new ArrayList<>();
-        Ion.with(context)
-                .load(subreddit.isEmpty() ? "https://www.reddit.com/.json" : "https://www.reddit.com/r/" + subreddit
-                        + "/.json")
-                .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
-                .asJsonObject()
-                .setCallback(new FutureCallback<JsonObject>() {
-                    @Override
-                    public void onCompleted(Exception e, JsonObject result) {
-                        // do stuff with the result or error
-                        if (e == null) {
-                            JsonArray postsJson = result.getAsJsonObject("data").getAsJsonArray("children");
-                            for (JsonElement postsElement : postsJson) {
-                                JsonObject postJson = postsElement.getAsJsonObject().getAsJsonObject("data");
-                                JSONObject postJSON;
-                                try {
-                                    postJSON = new JSONObject(postJson.getAsJsonObject().toString());
-                                    Post post;
-                                    if (Double.isNaN(postJSON.optDouble("edited")))
-                                        post = new Post(postJSON.getString("domain"), postJSON.getString("banned_by"), postJSON
-                                                .getString("subreddit"), postJSON.isNull
-                                                ("suggested_sort") ? null : postJSON.getString("suggested_sort"), postJSON
-                                                .getJSONArray("user_reports").toString(), postJSON.isNull("link_flair_text") ? null :
-                                                postJSON.getString("link_flair_text"), postJSON.getString("id"), postJSON.getInt
-                                                ("gilded"), postJSON.getBoolean("clicked"), postJSON
-                                                .getString("author"), postJSON.isNull("media") ? null : postJSON.getJSONObject
-                                                ("media").toString(), postJSON.getInt("score"), postJSON.getBoolean("over_18"),
-                                                postJSON.getBoolean("hidden"), postJSON.isNull("preview") ? null : postJSON
-                                                .getJSONObject("preview").getJSONArray("images").getJSONObject(0).getJSONObject
-                                                        ("source").getString("url"), postJSON.getInt("num_comments"), postJSON
-                                                .getString("thumbnail"), postJSON.getString("subreddit_id"), postJSON.getBoolean
-                                                ("hide_score"), postJSON.getBoolean("saved"), postJSON.getBoolean
-                                                ("stickied"), postJSON.isNull("from") ? null : postJSON.getJSONObject("from")
-                                                .toString(), postJSON.isNull("from_id") ? null :
-                                                postJSON.getJSONObject("from_id").toString(), postJSON.getString("permalink"),
-                                                postJSON.getBoolean("locked"), postJSON.getString("name"), postJSON.getString
-                                                ("url"), postJSON.getBoolean("quarantine"), postJSON
-                                                .getString("title"), (long) postJSON.getDouble("created_utc"), postJSON.isNull
-                                                ("distinguished") ? null : postJSON.getString("distinguished"), postJSON
-                                                .getJSONArray("mod_reports").toString(), postJSON.getBoolean("visited"));
-                                    else
-                                        post = new Post(postJSON.getString("domain"), postJSON.getString("banned_by"), postJSON
-                                                .getString("subreddit"), postJSON.isNull
-                                                ("suggested_sort") ? null : postJSON.getString("suggested_sort"), postJSON
-                                                .getJSONArray("user_reports").toString(), postJSON.isNull("link_flair_text") ?
-                                                null : postJSON.getString("link_flair_text"), postJSON.getString("id"), postJSON
-                                                .getInt("gilded"), postJSON.getBoolean
-                                                ("clicked"), postJSON.getString("author"), postJSON.isNull("media") ? null :
-                                                postJSON.getJSONObject("media").toString(), postJSON.getInt("score"), postJSON
-                                                .getBoolean("over_18"), postJSON.getBoolean("hidden"), postJSON.isNull("preview")
-                                                ? null : postJSON.getJSONObject("preview").getJSONArray("images").getJSONObject
-                                                (0).getJSONObject("source").getString("url"), postJSON.getInt("num_comments"),
-                                                postJSON.getString("thumbnail"), postJSON.getString("subreddit_id"), postJSON
-                                                .getBoolean("hide_score"), postJSON.getDouble("edited"),
-                                                postJSON.getBoolean("saved"), postJSON.getBoolean
-                                                ("stickied"), postJSON.isNull("from") ? null : postJSON.getJSONObject("from")
-                                                .toString(), postJSON.isNull("from_id") ? null :
-                                                postJSON.getJSONObject("from_id").toString(), postJSON.getString("permalink"),
-                                                postJSON.getBoolean("locked"), postJSON.getString("name"), postJSON.getString
-                                                ("url"), postJSON.getBoolean("quarantine"), postJSON
-                                                .getString("title"), (long) postJSON.getDouble("created_utc"), postJSON.isNull
-                                                ("distinguished") ? null : postJSON.getString("distinguished"), postJSON
-                                                .getJSONArray("mod_reports").toString(), postJSON.getBoolean("visited"));
-                                    posts.add(post);
-                                } catch (JSONException e1) {
-                                    Toast.makeText(getContext(), e1.getMessage(), Toast.LENGTH_LONG).show();
-                                }
-                            }
-                        } else
-                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                        SubredditFragment.getInstance().getAdapter().addPosts(posts);
-                        Log.d("refresh", "refreshing finished");
-                        SubredditFragment.getInstance().getSwipeRefreshLayout().setRefreshing(false);
+        AsyncHttpClient subredditClient = new AsyncHttpClient();
+        final PersistentCookieStore cookieStore = new PersistentCookieStore(context);
+        subredditClient.setCookieStore(cookieStore);
+        subredditClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+        subredditClient.get(context, subreddit.isEmpty() ? "https://www.reddit.com/.json" : "https://www.reddit" +
+                ".com/r/" + subreddit + "/.json", new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                JSONArray postsJson;
+                try {
+                    postsJson = response.getJSONObject("data").getJSONArray("children");
+                    for (int i = 0; i < postsJson.length(); i++) {
+                        JSONObject postJSON = postsJson.getJSONObject(i).getJSONObject("data");
+                        Post post;
+                        if (Double.isNaN(postJSON.optDouble("edited")))
+                            post = new Post(postJSON.getString("domain"), postJSON.getString("banned_by"), postJSON
+                                    .getString("subreddit"), postJSON.isNull
+                                    ("suggested_sort") ? null : postJSON.getString("suggested_sort"), postJSON
+                                    .getJSONArray("user_reports").toString(), postJSON.isNull("link_flair_text") ? null :
+                                    postJSON.getString("link_flair_text"), postJSON.getInt
+                                    ("gilded"), postJSON.getBoolean("clicked"), postJSON
+                                    .getString("author"), postJSON.isNull("media") ? null : postJSON.getJSONObject
+                                    ("media").toString(), postJSON.getInt("score"), postJSON.getBoolean("over_18"),
+                                    postJSON.getBoolean("hidden"), postJSON.isNull("preview") ? null : postJSON
+                                    .getJSONObject("preview").getJSONArray("images").getJSONObject(0).getJSONObject
+                                            ("source").getString("url"), postJSON.getInt("num_comments"), postJSON
+                                    .getString("thumbnail"), postJSON.getString("subreddit_id"), postJSON.getBoolean
+                                    ("hide_score"), postJSON.getBoolean("saved"), postJSON.getBoolean
+                                    ("stickied"), postJSON.isNull("from") ? null : postJSON.getJSONObject("from")
+                                    .toString(), postJSON.isNull("from_id") ? null :
+                                    postJSON.getJSONObject("from_id").toString(), postJSON.getString("permalink"),
+                                    postJSON.getBoolean("locked"), postJSON.getString("name"), postJSON.getString
+                                    ("url"), postJSON.getBoolean("quarantine"), postJSON
+                                    .getString("title"), (long) postJSON.getDouble("created_utc"), postJSON.isNull
+                                    ("distinguished") ? null : postJSON.getString("distinguished"), postJSON
+                                    .getJSONArray("mod_reports").toString(), postJSON.getBoolean("visited"), postJSON
+                                    .isNull("likes") ? 0 : postJSON.getBoolean("likes") ? 1 : -1, postJSON.getString
+                                    ("selftext"));
+                        else
+                            post = new Post(postJSON.getString("domain"), postJSON.getString("banned_by"), postJSON
+                                    .getString("subreddit"), postJSON.isNull
+                                    ("suggested_sort") ? null : postJSON.getString("suggested_sort"), postJSON
+                                    .getJSONArray("user_reports").toString(), postJSON.isNull("link_flair_text") ?
+                                    null : postJSON.getString("link_flair_text"), postJSON
+                                    .getInt("gilded"), postJSON.getBoolean
+                                    ("clicked"), postJSON.getString("author"), postJSON.isNull("media") ? null :
+                                    postJSON.getJSONObject("media").toString(), postJSON.getInt("score"), postJSON
+                                    .getBoolean("over_18"), postJSON.getBoolean("hidden"), postJSON.isNull("preview")
+                                    ? null : postJSON.getJSONObject("preview").getJSONArray("images").getJSONObject
+                                    (0).getJSONObject("source").getString("url"), postJSON.getInt("num_comments"),
+                                    postJSON.getString("thumbnail"), postJSON.getString("subreddit_id"), postJSON
+                                    .getBoolean("hide_score"), postJSON.getDouble("edited"),
+                                    postJSON.getBoolean("saved"), postJSON.getBoolean
+                                    ("stickied"), postJSON.isNull("from") ? null : postJSON.getJSONObject("from")
+                                    .toString(), postJSON.isNull("from_id") ? null :
+                                    postJSON.getJSONObject("from_id").toString(), postJSON.getString("permalink"),
+                                    postJSON.getBoolean("locked"), postJSON.getString("name"), postJSON.getString
+                                    ("url"), postJSON.getBoolean("quarantine"), postJSON
+                                    .getString("title"), (long) postJSON.getDouble("created_utc"), postJSON.isNull
+                                    ("distinguished") ? null : postJSON.getString("distinguished"), postJSON
+                                    .getJSONArray("mod_reports").toString(), postJSON.getBoolean("visited"), postJSON
+                                    .isNull("likes") ? 0 : postJSON.getBoolean("likes") ? 1 : -1, postJSON.getString
+                                    ("selftext"));
+                        posts.add(post);
                     }
-                });
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                SubredditFragment.getInstance().getAdapter().addPosts(posts);
+                if (SubredditFragment.getInstance().getProgressBar().getVisibility() == View.GONE)
+                    SubredditFragment.getInstance().getSwipeRefreshLayout().setRefreshing(false);
+                else
+                    SubredditFragment.getInstance().getProgressBar().setVisibility(View.GONE);
+            }
+        });
     }
 
     public void getSubreddits() {
-        //loading default subreddits
-        getSubreddits("");
-    }
-
-    public void getSubreddits(String modhash) {
-        Log.d("getSubreddits()", Authentication.getInstance().getCookie());
+        String accessToken = Authentication.getInstance().getAccessToken();
         final ArrayList<Subreddit> subredditsList = new ArrayList<>();
-        Ion.with(getContext()).load(modhash.isEmpty() ? "https://www.reddit.com/subreddits/default/.json?limit=50" :
-                "http://www.reddit.com/reddits/mine.json?modhash=" + modhash)
+        Ion.with(context).load(accessToken.isEmpty() ? "https://www.reddit.com/subreddits/default/.json?limit=50" :
+                "https://oauth.reddit.com/subreddits/mine/.json")
                 .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
-                .addHeader("Cookie", Authentication.getInstance().getCookie())
-                .asJsonObject()
-                .setCallback(new FutureCallback<JsonObject>() {
+                .addHeader("Authorization", "bearer " + accessToken)
+                .asJsonObject().withResponse()
+                .setCallback(new FutureCallback<Response<JsonObject>>() {
                     @Override
-                    public void onCompleted(Exception e, JsonObject result) {
-                        JsonArray subredditsArray = result.getAsJsonObject("data").getAsJsonArray("children");
+                    public void onCompleted(Exception e, Response<JsonObject> result) {
+                        if (result.getResult().has("error")) {
+                            refreshAccessToken();
+                            getSubreddits();
+                            return;
+                        }
+                        JsonArray subredditsArray = result.getResult().getAsJsonObject("data").getAsJsonArray
+                                ("children");
                         Menu menu = MainActivity.getInstance().getNavigationView().getMenu();
                         SubMenu subredditsMenu = menu.addSubMenu("Subreddits");
+                        if (Authentication.getInstance().isLoggedIn())
+                            subredditsMenu.add("frontpage");
                         subredditsMenu.add("all");
                         for (JsonElement subredditsElement : subredditsArray) {
                             if (subredditsElement.getAsJsonObject().getAsJsonPrimitive("kind").getAsString().equals("t5")) {
                                 JsonObject subredditJSON = subredditsElement.getAsJsonObject().getAsJsonObject("data");
                                 Subreddit subreddit = new Subreddit(subredditJSON.getAsJsonPrimitive("display_name")
-                                        .getAsString(), subredditJSON.getAsJsonPrimitive("description").getAsString(),
-                                        subredditJSON.getAsJsonPrimitive("public_description").getAsString(), subredditJSON
+                                        .getAsString(), subredditJSON.getAsJsonPrimitive("name").getAsString(),
+                                        subredditJSON.getAsJsonPrimitive("description").getAsString(), subredditJSON
+                                        .getAsJsonPrimitive("public_description").getAsString(), subredditJSON
                                         .getAsJsonPrimitive("comment_score_hide_mins").getAsInt(), subredditJSON
                                         .getAsJsonPrimitive("subreddit_type").getAsString(), subredditJSON.getAsJsonPrimitive
                                         ("over18").getAsBoolean(), subredditJSON.getAsJsonPrimitive("subscribers").getAsInt()
@@ -188,73 +199,120 @@ public class ConnectionSingleton {
                         for (Subreddit subreddit : subredditsList) {
                             subredditsMenu.add(subreddit.getName());
                         }
+                        MainActivity.getInstance().onNavigationItemSelected(subredditsMenu.getItem(0));
                     }
                 });
     }
 
-    public void getPostData(String permalink) {
+    public void reloadSubreddits() {
+        MainActivity.getInstance().getNavigationView().getMenu().removeItem(0);
+        MainActivity.getInstance().invalidateOptionsMenu();
+        getSubreddits();
+    }
+
+    public void getLinkData(String permalink) {
+//        permalink = "/r/sircmpwn/comments/3t925b/testing_commenting/";
         final ArrayList<Comment> comments = new ArrayList<>();
-        Ion.with(getContext())
-                .load("https://www.reddit.com" + permalink + "/.json")
-                .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
-                .asJsonArray().setCallback(new FutureCallback<JsonArray>() {
+        final Post[] post = new Post[1];
+        AsyncHttpClient subredditClient = new AsyncHttpClient();
+        final PersistentCookieStore cookieStore = new PersistentCookieStore(context);
+        subredditClient.setCookieStore(cookieStore);
+        subredditClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+        subredditClient.get(context, "https://www.reddit.com" + permalink + "/.json", new JsonHttpResponseHandler() {
             @Override
-            public void onCompleted(Exception e, JsonArray result) {
-                JsonArray commentsJSON = result.get(1).getAsJsonObject().getAsJsonObject("data").getAsJsonArray
-                        ("children");
-                for (JsonElement commentsElement : commentsJSON) {
-                    String kind = commentsElement.getAsJsonObject().getAsJsonPrimitive("kind").getAsString();
-                    JsonObject commentJSON = commentsElement.getAsJsonObject().getAsJsonObject("data");
-                    if (kind.equals("t1")) {
-                        Comment comment = new Comment(commentJSON.getAsJsonPrimitive("subreddit_id").getAsString(),
-                                commentJSON.getAsJsonPrimitive("link_id").getAsString(), commentJSON.getAsJsonPrimitive
-                                ("saved").getAsBoolean(), commentJSON.getAsJsonPrimitive("id").getAsString(), commentJSON
-                                .getAsJsonPrimitive("gilded").getAsInt(), commentJSON.getAsJsonPrimitive("archived")
-                                .getAsBoolean(), commentJSON.getAsJsonPrimitive("author").getAsString(), commentJSON
-                                .getAsJsonPrimitive("score").getAsInt(), commentJSON.getAsJsonPrimitive("body")
-                                .getAsString(), commentJSON.getAsJsonPrimitive("edited").getAsBoolean(), commentJSON
-                                .getAsJsonPrimitive("body_html").getAsString(), commentJSON.getAsJsonPrimitive
-                                ("score_hidden").getAsBoolean(), commentJSON.getAsJsonPrimitive("created_utc").getAsLong
-                                (), commentJSON.get("author_flair_text").isJsonNull() ? "" : commentJSON
-                                .getAsJsonPrimitive("author_flair_text").getAsString());
-                        comment.setReplies(commentJSON.get("replies").isJsonPrimitive() ? new JsonArray() : commentJSON
-                                .getAsJsonObject("replies").getAsJsonObject("data").getAsJsonArray("children"));
-                        comment.setUserReports(commentJSON.getAsJsonArray("user_reports"));
-                        comments.add(comment);
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                try {
+                    JSONArray commentsJSON = response.getJSONObject(1).getJSONObject("data").getJSONArray("children");
+                    for (int i = 0; i < commentsJSON.length(); i++) {
+                        String kind = commentsJSON.getJSONObject(i).getString("kind");
+                        JSONObject commentJSON = commentsJSON.getJSONObject(i).getJSONObject("data");
+                        if (kind.equals("t1")) {
+                            Comment comment = new Comment(commentJSON.getString("subreddit_id"), commentJSON
+                                    .getString("link_id"), commentJSON.getBoolean("saved"), commentJSON.getString
+                                    ("name"), commentJSON.getInt("gilded"), commentJSON.getBoolean("archived"),
+                                    commentJSON.getString("author"), commentJSON.getInt("score"), commentJSON
+                                    .getString("body"), commentJSON.optDouble("edited", -1.0), commentJSON.getString
+                                    ("body_html"), commentJSON.getBoolean("score_hidden"), commentJSON.getLong
+                                    ("created_utc"), commentJSON.isNull("author_flair_text") ? "" : commentJSON
+                                    .getString("author_flair_text"), commentJSON.isNull("likes") ? 0 : commentJSON
+                                    .getBoolean("likes") ? 1 : -1);
+                            comment.setReplies(commentJSON.optJSONObject("replies") == null ? null : commentJSON
+                                    .getJSONObject("replies").getJSONObject("data").getJSONArray("children"));
+                            comment.setUserReports(commentJSON.getJSONArray("user_reports"));
+                            comments.add(comment);
+                        } else if (kind.equals("t3")) {
+                                post[0] = new Post(commentJSON.getString("domain"), commentJSON.getString("banned_by"),
+                                        commentJSON
+                                                .getString("subreddit"), commentJSON.isNull
+                                        ("suggested_sort") ? null : commentJSON.getString("suggested_sort"), commentJSON
+                                        .getJSONArray("user_reports").toString(), commentJSON.isNull("link_flair_text") ? null :
+                                        commentJSON.getString("link_flair_text"), commentJSON.getInt
+                                        ("gilded"), commentJSON.getBoolean("clicked"), commentJSON
+                                        .getString("author"), commentJSON.isNull("media") ? null : commentJSON.getJSONObject
+                                        ("media").toString(), commentJSON.getInt("score"), commentJSON.getBoolean("over_18"),
+                                        commentJSON.getBoolean("hidden"), commentJSON.isNull("preview") ? null : commentJSON
+                                        .getJSONObject("preview").getJSONArray("images").getJSONObject(0).getJSONObject
+                                                ("source").getString("url"), commentJSON.getInt("num_comments"), commentJSON
+                                        .getString("thumbnail"), commentJSON.getString("subreddit_id"), commentJSON.getBoolean
+                                        ("hide_score"), commentJSON.optDouble("edited", -1.0), commentJSON.getBoolean
+                                         //Ali and Rushil production
+                                        ("saved"), commentJSON.getBoolean("stickied"), commentJSON.isNull("from") ?
+                                        null : commentJSON.getJSONObject("from").toString(), commentJSON.isNull
+                                        ("from_id") ? null : commentJSON.getJSONObject("from_id").toString(),
+                                        commentJSON.getString("permalink"), commentJSON.getBoolean("locked"),
+                                        commentJSON.getString("name"), commentJSON.getString("url"), commentJSON
+                                        .getBoolean("quarantine"), commentJSON.getString("title"), (long) commentJSON
+                                        .getDouble("created_utc"), commentJSON.isNull("distinguished") ? null :
+                                        commentJSON.getString("distinguished"), commentJSON.getJSONArray
+                                        ("mod_reports").toString(), commentJSON.getBoolean("visited"), commentJSON
+                                        .isNull("likes") ? 0 : commentJSON.getBoolean("likes") ? 1 : -1, commentJSON.getString
+                                        ("selftext"));
+                            CommentsActivity.getAdapter().setPost(post[0]);
+                        }
                     }
+                    CommentsActivity.getAdapter().addComments(comments);
+
+                    if (CommentsActivity.getProgressBar().getVisibility() == View.GONE)
+                        CommentsActivity.getSwipeRefreshLayout().setRefreshing(false);
+                    else
+                        CommentsActivity.getProgressBar().setVisibility(View.GONE);
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-                CommentsActivity.getAdapter().addComments(comments);
             }
         });
     }
 
-    public void loadImage(String url, final ImageView imageView, final ProgressBar loading) {
-        Ion.with(getContext()).load(url)
-                .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
-                .progressBar(loading).progressHandler(new ProgressCallback() {
+    public void loadImage(String url, final SimpleDraweeView imageView, final ProgressBar loading) {
+        ControllerListener listener = new BaseControllerListener() {
             @Override
-            public void onProgress(final long downloaded, final long total) {
-                loading.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        loading.setProgress((int) ((double) (downloaded) / (double) (total) * 100));
-                    }
-                });
-            }
-        }).intoImageView(imageView).setCallback(new FutureCallback<ImageView>() {
-            @Override
-            public void onCompleted(Exception e, ImageView result) {
-                if (e != null) {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                    return;
-                }
+            public void onFinalImageSet(String id, Object imageInfo, Animatable animatable) {
                 loading.setVisibility(View.GONE);
             }
-        });
+
+            @Override
+            public void onFailure(String id, Throwable throwable) {
+                loading.setVisibility(View.GONE);
+            }
+        };
+        ImageRequest request = ImageRequestBuilder.newBuilderWithSource(Uri.parse(url))
+                .setResizeOptions(new ResizeOptions(2560, 2560))
+                .setProgressiveRenderingEnabled(true)
+                .setLocalThumbnailPreviewsEnabled(true)
+                .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
+                .setAutoRotateEnabled(true)
+                .build();
+        DraweeController controller = Fresco.newDraweeControllerBuilder()
+                .setImageRequest(request)
+                .setTapToRetryEnabled(true)
+                .setOldController(imageView.getController())
+                .setControllerListener(listener)
+                .build();
+
+        imageView.setController(controller);
     }
 
-    public void loadImage(final String url, final SubsamplingScaleImageView imageView, final ProgressBar
-            loading, final String tag) {
+    public void loadImage(final String url, final ZoomableDraweeView imageView, final ProgressBar loading) {
         if (url.contains("https://www.flickr.com")) {
             boolean modifyURL = true;
             for (String constant : ConstantMap.getInstance().getConstantMap().keySet())
@@ -263,7 +321,7 @@ public class ConnectionSingleton {
                     break;
                 }
             if (modifyURL) {
-                Ion.with(getContext()).load("https://www.flickr.com/services/rest/?method=flickr.photos" +
+                Ion.with(context).load("https://www.flickr.com/services/rest/?method=flickr.photos" +
                         ".search&format=json&api_key=9e79c7a853db58eec8122a6e11e58713&user_id=" + url
                         .split("/")[4] + "&nojsoncallback=1")
                         .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
@@ -285,13 +343,13 @@ public class ConnectionSingleton {
                                 break;
                             }
                         }
-                        loadImage(modifiedURL.getUrl(), imageView, loading, tag);
+                        loadImage(modifiedURL.getUrl(), imageView, loading);
                     }
                 });
             }
             return;
         } else if (url.contains("http://imgur.com")) {
-            Ion.with(getContext()).load("https://api.imgur.com/3/image/" + url.split("/")[3])
+            Ion.with(context).load("https://api.imgur.com/3/image/" + url.split("/")[3])
                     .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
                     .addHeader("Authorization", "Client-ID " + APIKey.getInstance().getAPIKey(APIKey
                             .IMGUR_CLIENT_ID_KEY))
@@ -300,46 +358,44 @@ public class ConnectionSingleton {
                         @Override
                         public void onCompleted(Exception e, JsonObject result) {
                             String url = result.getAsJsonObject("data").getAsJsonPrimitive("link").getAsString();
-                            loadImage(url, imageView, loading, tag);
+                            loadImage(url, imageView, loading);
                         }
                     });
             return;
         }
-        Ion.with(getContext()).load(url)
-                .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
-                .progressHandler(new ProgressCallback() {
-                    @Override
-                    public void onProgress(final long downloaded, final long total) {
-                        loading.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                loading.setProgress((int) ((double) (downloaded) / (double) (total) * 100));
-                            }
-                        });
-                    }
-                }).group(tag).asBitmap().setCallback(new FutureCallback<Bitmap>() {
+
+        ControllerListener listener = new BaseControllerListener() {
             @Override
-            public void onCompleted(Exception e, Bitmap result) {
-                if (result != null)
-                    imageView.setImage(ImageSource.bitmap(result));
-                if (e != null) {
-                    if (e.getMessage() == null || e.getMessage().equals(""))
-                        Toast.makeText(getContext(), "Image failed to load!", Toast.LENGTH_SHORT).show();
-                    else
-                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.d("failed_url", url);
-                }
+            public void onFinalImageSet(String id, Object imageInfo, Animatable animatable) {
                 loading.setVisibility(View.GONE);
             }
-        });
+
+            @Override
+            public void onFailure(String id, Throwable throwable) {
+                loading.setVisibility(View.GONE);
+            }
+        };
+
+        ImageRequest request = ImageRequestBuilder.newBuilderWithSource(Uri.parse(url))
+                .setResizeOptions(new ResizeOptions(2560, 2560))
+                .setProgressiveRenderingEnabled(true)
+                .setLocalThumbnailPreviewsEnabled(true)
+                .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
+                .setAutoRotateEnabled(true)
+                .build();
+        DraweeController controller = Fresco.newDraweeControllerBuilder()
+                .setImageRequest(request)
+                .setTapToRetryEnabled(true)
+                .setOldController(imageView.getController())
+                .setControllerListener(listener)
+                .build();
+        imageView.setController(controller);
     }
 
     public void loadGIF(String url, final VideoView videoView, final ProgressBar loading, final String tag) {
-        Log.d("url_before", url);
         url = url.replace(".gifv", ".gif");
-        Log.d("url_after", url);
         final String modifiedURL = url;
-        Ion.with(getContext()).load("http://gfycat.com/cajax/checkUrl/" + url)
+        Ion.with(context).load("http://gfycat.com/cajax/checkUrl/" + url)
                 .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
                 .group(tag)
                 .asJsonObject().setCallback(new FutureCallback<JsonObject>() {
@@ -355,47 +411,111 @@ public class ConnectionSingleton {
                             mp.setLooping(true);
                         }
                     });
-                } else {
-                    Ion.with(getContext()).load("http://upload.gfycat.com/transcode?fetchUrl=" + modifiedURL)
-                            .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
-                            .asJsonObject().
-                            setCallback(new FutureCallback<JsonObject>() {
-                                @Override
-                                public void onCompleted(Exception e, JsonObject result) {
-                                    videoView.setVideoURI(Uri.parse(result.getAsJsonPrimitive("mp4Url").getAsString()));
-                                    videoView.start();
-                                    videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                                        @Override
-                                        public void onPrepared(MediaPlayer mp) {
-                                            loading.setVisibility(View.GONE);
-                                            mp.setLooping(true);
-                                        }
-                                    });
-                                }
-                            });
+                } else
+                    uploadGIF(modifiedURL, videoView, loading);
+            }
+        });
+    }
+
+    public void uploadGIF(String url, final VideoView videoView, final ProgressBar loading) {
+        Ion.with(context).load("http://upload.gfycat.com/transcode?fetchUrl=" + url)
+                .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
+                .asJsonObject().
+                setCallback(new FutureCallback<JsonObject>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonObject result) {
+                        videoView.setVideoURI(Uri.parse(result.getAsJsonPrimitive("mp4Url").getAsString()));
+                        videoView.start();
+                        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                            @Override
+                            public void onPrepared(MediaPlayer mp) {
+                                loading.setVisibility(View.GONE);
+                                mp.setLooping(true);
+                            }
+                        });
+                    }
+                });
+    }
+
+    public void loadVideo(String url, final VideoView videoView, final ProgressBar loading) {
+        videoView.setVideoURI(Uri.parse(url));
+        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                loading.setVisibility(View.GONE);
+                videoView.start();
+            }
+        });
+    }
+
+    public void comment(final String text, final String id, final EditText editMessage) {
+        AsyncHttpClient commentClient = new AsyncHttpClient();
+        commentClient.addHeader("Authorization", "bearer " + Authentication.getInstance().getAccessToken());
+        commentClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+        HashMap<String, String> bodyParams = new HashMap<>(3);
+        bodyParams.put("api_type", "json");
+        bodyParams.put("text", text);
+        bodyParams.put("thing_id", id);
+        RequestParams params = new RequestParams(bodyParams);
+        commentClient.post(context, "https://oauth.reddit.com/api/comment/.json", params, new JsonHttpResponseHandler
+                () {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                try {
+                    JSONObject commentsJSON = response.getJSONObject("json").getJSONObject("data").getJSONArray
+                            ("things").getJSONObject(0);
+                    String kind = commentsJSON.getString("kind");
+                    JSONObject commentJSON = commentsJSON.getJSONObject("data");
+                    if (kind.equals("t1")) {
+                        Comment comment = new Comment(commentJSON.getString("subreddit_id"), commentJSON
+                                .getString("link_id"), commentJSON.getBoolean("saved"), commentJSON.getString
+                                ("name"), commentJSON.getInt("gilded"), commentJSON.getBoolean("archived"),
+                                commentJSON.getString("author"), commentJSON.getInt("score"), commentJSON
+                                .getString("body"), commentJSON.optDouble("edited", -1.0), commentJSON.getString
+                                ("body_html"), commentJSON.getBoolean("score_hidden"), commentJSON.getLong
+                                ("created_utc"), commentJSON.isNull("author_flair_text") ? "" : commentJSON
+                                .getString("author_flair_text"), commentJSON.isNull("likes") ? 0 : commentJSON
+                                .getBoolean("likes") ? 1 : -1, commentJSON.getString("parent_id"));
+                        comment.setReplies(commentJSON.optJSONObject("replies") == null ? null : commentJSON
+                                .getJSONObject("replies").getJSONObject("data").getJSONArray("children"));
+                        comment.setUserReports(commentJSON.getJSONArray("user_reports"));
+                        editMessage.getText().clear();
+                        CommentsActivity.getAdapter().addComment(comment);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
             }
         });
     }
 
-    private Context getContext() {
-        return context;
-    }
-
     public void login(final Context context) {
-        new AlertDialog.Builder(context, R.style.DialogTheme)
+        final AlertDialog alertDialog = new AlertDialog.Builder(context, R.style.DialogTheme)
                 .setTitle("Login to Reddit")
-                .setView(R.layout.layout_login)
-                .setPositiveButton("Login", new DialogInterface.OnClickListener() {
+                .setView(R.layout.layout_login_dialog)
+                .setPositiveButton("Login", null)
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).create();
+        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(final DialogInterface dialog) {
+                Button login = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                login.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
                         Dialog view = (Dialog) dialog;
                         EditText usernameEditText = (EditText) view.findViewById(R.id.username);
                         EditText passwordEditText = (EditText) view.findViewById(R.id.password);
                         String username = usernameEditText.getText().toString();
                         String password = passwordEditText.getText().toString();
+                        Log.d("check", String.valueOf(checkUsername(username) && checkPassword(password)));
                         if (checkUsername(username) && checkPassword(password)) {
                             login(username, password, context);
+                            alertDialog.dismiss();
                         } else {
                             if (!checkUsername(username))
                                 usernameEditText.setError("Username must have between 3 and 20 characters");
@@ -403,22 +523,15 @@ public class ConnectionSingleton {
                                 passwordEditText.setError("Password must have at least 6 characters!");
                         }
                     }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                }).show();
+                });
+            }
+        });
+        alertDialog.show();
     }
 
     private void login(String username, String password, final Context context) {
-        Log.d("login", "login");
-        final String url;
-        Log.d("user", username);
-        Log.d("passwd", password);
         AsyncHttpClient loginClient = new AsyncHttpClient();
-        final PersistentCookieStore cookieStore = new PersistentCookieStore(getContext());
+        final PersistentCookieStore cookieStore = new PersistentCookieStore(context);
         loginClient.setCookieStore(cookieStore);
         loginClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
         HashMap<String, String> bodyParameters = new HashMap<>();
@@ -426,16 +539,14 @@ public class ConnectionSingleton {
         bodyParameters.put("passwd", password);
         bodyParameters.put("api_type", "json");
         RequestParams params = new RequestParams(bodyParameters);
-        loginClient.post(getContext(), url = "https://www.reddit.com/api/login/" + username, params, new
+        loginClient.post(context, "https://www.reddit.com/api/login/" + username, params, new
                 JsonHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                         final String uh;
-                        Log.d("url", url);
                         try {
-                            PreferenceManager.getDefaultSharedPreferences(getContext()).edit().putString("modhash", uh =
+                            PreferenceManager.getDefaultSharedPreferences(context).edit().putString("modhash", uh =
                                     response.getJSONObject("json").getJSONObject("data").getString("modhash")).apply();
-                            Log.d("uh", uh);
                             new AlertDialog.Builder(context, R.style.DialogTheme)
                                     .setTitle(R.string.permission_title)
                                     .setMessage(R.string.permission_message)
@@ -449,6 +560,7 @@ public class ConnectionSingleton {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();
+                                            //TODO: Add dialog that lets user know that process couldn't continue and be respectful of the choice to allow permission
                                         }
                                     }).show();
                         } catch (JSONException e) {
@@ -459,7 +571,6 @@ public class ConnectionSingleton {
     }
 
     private void authorizeLogin(PersistentCookieStore cookieStore, String uh) {
-        Log.d("authorize", "authorize");
         final String state;
         AsyncHttpClient authorizeClient = new AsyncHttpClient();
         authorizeClient.setCookieStore(cookieStore);
@@ -467,19 +578,18 @@ public class ConnectionSingleton {
         final HashMap<String, String> authorizeParams = new HashMap<>();
         authorizeParams.put("client_id", APIKey.getInstance().getAPIKey(APIKey.REDDIT_CLIENT_ID_KEY));
         authorizeParams.put("redirect_uri", "http://silverandroid.me/");
-        authorizeParams.put("scope", "mysubreddits");
+        authorizeParams.put("scope", "mysubreddits,vote,submit");
         authorizeParams.put("state", state = UUID.randomUUID().toString());
         authorizeParams.put("response_type", "code");
         authorizeParams.put("duration", "permanent");
         authorizeParams.put("uh", uh);
         authorizeParams.put("authorize", "Allow");
         RequestParams requestParams = new RequestParams(authorizeParams);
-        authorizeClient.post(getContext(), "https://www.reddit.com/api/v1/authorize", requestParams, new
+        authorizeClient.post(context, "https://www.reddit.com/api/v1/authorize", requestParams, new
                 JsonHttpResponseHandler() {
                     @Override
                     public void onFailure(int statusCode, Header[] headers, String responseString, Throwable
                             throwable) {
-                        Log.d("location", headers[6].getValue());
                         try {
                             LinkedHashMap<String, List<String>> parameters = splitQuery(new java.net.URL(headers[6]
                                     .getValue()));
@@ -493,8 +603,7 @@ public class ConnectionSingleton {
     }
 
     private void retrieveAccessTokens(List<String> code, String redirectURL) {
-        Log.d("retrieve", "retrieve");
-        Ion.with(getContext()).load("POST", "https://www.reddit.com/api/v1/access_token")
+        Ion.with(context).load("POST", "https://www.reddit.com/api/v1/access_token")
                 .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
                 .basicAuthentication(APIKey.getInstance().getAPIKey(APIKey.REDDIT_CLIENT_ID_KEY), "")
                 .setBodyParameter("grant_type", "authorization_code")
@@ -503,9 +612,48 @@ public class ConnectionSingleton {
                 .asJsonObject().withResponse().setCallback(new FutureCallback<Response<JsonObject>>() {
             @Override
             public void onCompleted(Exception e, Response<JsonObject> result) {
-                Log.d("result", result.getResult().toString());
+                Authentication.getInstance().saveAccessToken(result.getResult().getAsJsonPrimitive("access_token")
+                        .getAsString());
+                Authentication.getInstance().saveRefreshToken(result.getResult().getAsJsonPrimitive("refresh_token")
+                        .getAsString());
+                MainActivity.getInstance().getNavigationView().getMenu().getItem(0).setTitle("Log out");
+                reloadSubreddits();
             }
         });
+    }
+
+    private void refreshAccessToken() {
+        Ion.with(context).load("POST", "https://www.reddit.com/api/v1/access_token")
+                .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
+                .basicAuthentication(APIKey.getInstance().getAPIKey(APIKey.REDDIT_CLIENT_ID_KEY), "")
+                .setBodyParameter("grant_type", "refresh_token")
+                .setBodyParameter("refresh_token", Authentication.getInstance().getRefreshToken())
+                .asJsonObject().withResponse().setCallback(new FutureCallback<Response<JsonObject>>() {
+            @Override
+            public void onCompleted(Exception e, Response<JsonObject> result) {
+                Log.d("result", result.getResult().toString());
+                Authentication.getInstance().saveAccessToken(result.getResult().getAsJsonPrimitive("access_token")
+                        .getAsString());
+            }
+        });
+    }
+
+    public void vote(String id, int dir) {
+        Log.d("id", id);
+        String accessToken = Authentication.getInstance().getAccessToken();
+        Ion.with(context).load("POST", "https://oauth.reddit.com/api/vote.json")
+                .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
+                .addHeader("Authorization", "bearer " + accessToken)
+                .setBodyParameter("dir", String.valueOf(dir))
+                .setBodyParameter("id", id)
+                .asJsonObject().withResponse()
+                .setCallback(new FutureCallback<Response<JsonObject>>() {
+                    @Override
+                    public void onCompleted(Exception e, Response<JsonObject> result) {
+                        Log.d("result", result.getResult().toString());
+                    }
+                });
+        Log.d("id", String.valueOf(dir));
     }
 
     private boolean checkUsername(String username) {
