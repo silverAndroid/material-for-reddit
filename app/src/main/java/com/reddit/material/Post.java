@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Created by Rushil Perera on 10/29/2015.
  */
-public class Post implements Serializable {
+public class Post implements Serializable, VotingHelper {
 
     private String domain;
     private String bannedBy;
@@ -37,7 +37,6 @@ public class Post implements Serializable {
     private String fromID;
     private String permalink;
     private boolean locked;
-    private String name;
     private String url;
     private boolean quarantine;
     private String title;
@@ -45,21 +44,23 @@ public class Post implements Serializable {
     private String distinguished;
     private String modReports;
     private boolean visited;
+    private int vote;
+    private final String selfText;
 //    private String numReports;
 
     public Post(String domain, String bannedBy, String subreddit, String suggestedSort, String userReports, String
-            linkFlairText, String id, int gilded, boolean clicked, String author, String media, int score, boolean
-                        over18, boolean hidden, String previewImageURL, int numComments, String thumbnailURL, String
-                        subredditID, boolean hideScore, boolean saved, boolean stickied, String from, String fromID,
-                String permalink, boolean locked, String name, String url, boolean quarantine, String title, long
-                        createdUTC, String distinguished, String modReports, boolean visited) {
+            linkFlairText, int gilded, boolean clicked, String author, String media, int score, boolean over18,
+                boolean hidden, String previewImageURL, int numComments, String thumbnailURL, String subredditID,
+                boolean hideScore, boolean saved, boolean stickied, String from, String fromID, String permalink,
+                boolean locked, String name, String url, boolean quarantine, String title, long createdUTC, String
+                        distinguished, String modReports, boolean visited, int vote, String selfText) {
         this.domain = domain;
         this.bannedBy = bannedBy;
         this.subreddit = subreddit;
         this.suggestedSort = suggestedSort;
         this.userReports = userReports;
         this.linkFlairText = linkFlairText;
-        this.id = id;
+        this.id = name;
         this.gilded = gilded;
         this.clicked = clicked;
         this.author = author;
@@ -72,6 +73,8 @@ public class Post implements Serializable {
         this.thumbnailURL = thumbnailURL;
         this.subredditID = subredditID;
         this.hideScore = hideScore;
+        this.vote = vote;
+        this.selfText = selfText;
         this.edited = 0.0;
         this.saved = saved;
         this.stickied = stickied;
@@ -79,7 +82,6 @@ public class Post implements Serializable {
         this.fromID = fromID;
         this.permalink = permalink;
         this.locked = locked;
-        this.name = name;
         this.url = url;
         this.quarantine = quarantine;
         this.title = title;
@@ -89,20 +91,20 @@ public class Post implements Serializable {
         this.visited = visited;
     }
 
-    public Post(String domain, String banned_by, String subreddit, String
-            suggestedSort, String user_reports, String linkFlairText, String id, int gilded, boolean clicked, String
-                        author, String media, int score, boolean over_18, boolean hidden, String previewImageURL, int
-                        num_comments, String thumbnail, String subreddit_id, boolean hide_score, double edited,
-                boolean saved, boolean stickied, String from, String fromID, String permalink, boolean locked, String
-                        name, String url, boolean quarantine, String title, long created_utc, String distinguished,
-                String mod_reports, boolean visited) {
+    public Post(String domain, String banned_by, String subreddit, String suggestedSort, String user_reports, String
+            linkFlairText, int gilded, boolean clicked, String author, String media, int score, boolean over_18,
+                boolean hidden, String previewImageURL, int num_comments, String thumbnail, String subreddit_id,
+                boolean hide_score, double edited, boolean saved, boolean stickied, String from, String fromID,
+                String permalink, boolean locked, String name, String url, boolean quarantine, String title, long
+                        created_utc, String distinguished, String mod_reports, boolean visited, int vote, String
+                        selfText) {
         this.domain = domain;
         bannedBy = banned_by;
         this.subreddit = subreddit;
         this.suggestedSort = suggestedSort;
         userReports = user_reports;
         this.linkFlairText = linkFlairText;
-        this.id = id;
+        this.id = name;
         this.gilded = gilded;
         this.clicked = clicked;
         this.author = author;
@@ -122,7 +124,6 @@ public class Post implements Serializable {
         this.fromID = fromID;
         this.permalink = permalink;
         this.locked = locked;
-        this.name = name;
         this.url = url;
         this.quarantine = quarantine;
         this.title = title;
@@ -130,6 +131,8 @@ public class Post implements Serializable {
         this.distinguished = distinguished;
         modReports = mod_reports;
         this.visited = visited;
+        this.vote = vote;
+        this.selfText = selfText;
     }
 
     public String getDomain() {
@@ -156,7 +159,7 @@ public class Post implements Serializable {
         return linkFlairText;
     }
 
-    public String getId() {
+    public String getID() {
         return id;
     }
 
@@ -236,10 +239,6 @@ public class Post implements Serializable {
         return locked;
     }
 
-    public String getName() {
-        return name;
-    }
-
     public String getURL() {
         return url;
     }
@@ -266,5 +265,22 @@ public class Post implements Serializable {
 
     public boolean isVisited() {
         return visited;
+    }
+
+    @Override
+    public void vote(int dir) {
+        ConnectionSingleton.getInstance().vote(id, dir);
+    }
+
+    public int getVote() {
+        return vote;
+    }
+
+    public void setVote(int vote) {
+        this.vote = vote;
+    }
+
+    public String getSelfText() {
+        return selfText;
     }
 }
