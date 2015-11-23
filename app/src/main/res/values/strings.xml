@@ -11,7 +11,7 @@
     </string>
 
     <string name="html2">
-        <b>8 hrs</b> ago to r/<b>pcmasterrace</b>
+        <b>8 hours</b> ago to r/<b>todayilearned</b>
     </string>
 
     <!-- Strings related to login -->
@@ -29,16 +29,25 @@
     <string name="nsfw">NSFW</string>
 
     <string name="title_activity_video">VideoActivity</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
-
     <string name="title_activity_image">ImageActivity</string>
     <string name="title_activity_comments">CommentsActivity</string>
     <string name="dummy_comment">
         <div class="md"><p><b><em>""Damn it Peralta, it\'s a tip, not a life hack.""</em></b></p></div>
     </string>
     <string name="permission_title">Request for Permission</string>
-    <string name="permission_message">Material for Reddit would like to:\n\u2022 Access the list of subreddits you
-        moderate, contribute to, and subscribe to.\n\u2022 Maintain this access indefinitely (or until manually
-        revoked).\n\nIt will not be able to access your password.</string>
+    <string name="permission_message">Material for Reddit would like to:\n\u2022 Submit and change my votes on
+        comments and submissions.\n\u2022 Access the list of subreddits you moderate, contribute to, and subscribe
+        to.\n\u2022 Maintain this access indefinitely (or until manually revoked).\n\nIt will not be able to access
+        your password.</string>
+    <string name="username_hint">Username</string>
+    <string name="password_hint">Password</string>
+    <string name="title_activity_you_tube">YouTubeActivity</string>
+    <string name="dummy_self_text">The app puts the big colorful images right in the middle of your timeline and you can keep on scrolling without reaching the end.</string>
+    <string name="submit">Submit</string>
+    <string name="cancel">Cancel</string>
+    <string name="url_hint">URL</string>
+    <string name="error_invalid_url">Invalid URL</string>
+    <string name="menu_search">Search</string>
+    <string name="search_hint">Search on Reddit</string>
+    <string name="title_activity_search">SearchActivity</string>
 </resources>
