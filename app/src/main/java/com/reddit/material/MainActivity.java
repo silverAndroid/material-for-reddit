@@ -1,5 +1,7 @@
 package com.reddit.material;
 
+import android.app.SearchManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -9,16 +11,27 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.core.ImagePipelineConfig;
+import com.reddit.material.libraries.google.CustomTabActivityHelper;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static MainActivity instance;
     private NavigationView navigationView;
+    private CustomTabActivityHelper chromeTabsHelper;
+
+    public static MainActivity getInstance() {
+        return instance;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,9 +40,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         instance = this;
-        ConnectionSingleton.createInstance(getBaseContext());
-        Authentication.newInstance(getBaseContext());
-        ConnectionSingleton.getInstance().getSubreddits(/*Authentication.getInstance().getModHash()*/);
+        Context context = getBaseContext();
+        ImagePipelineConfig config = ImagePipelineConfig.newBuilder(context)
+                .setDownsampleEnabled(true)
+                .setResizeAndRotateEnabledForNetwork(true)
+                .build();
+        Fresco.initialize(context, config);
+        ConnectionSingleton.createInstance(context);
+        Authentication.newInstance(context);
+        ConnectionSingleton.getInstance().getSubreddits();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -51,9 +70,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (Authentication.getInstance().isLoggedIn()) {
             navigationView.getMenu().getItem(0).setTitle("Log out");
         }
+        chromeTabsHelper = new CustomTabActivityHelper();
+    }
 
-        getSupportFragmentManager().beginTransaction().add(R.id.container, SubredditFragment.newInstance())
-                .commit();
+    @Override
+    protected void onStart() {
+        super.onStart();
+        chromeTabsHelper.bindCustomTabsService(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        chromeTabsHelper.unbindCustomTabsService(this);
     }
 
     @Override
@@ -69,7 +98,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.menu_main, menu);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.menu_search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(new ComponentName(getApplicationContext(),
+                SearchActivity.class)));
         return true;
     }
 
@@ -100,8 +135,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         switch (id) {
             case R.id.login:
-                ConnectionSingleton.getInstance().login(MainActivity.this);
+                if (Authentication.getInstance().isLoggedIn()) {
+                    Authentication.getInstance().logout();
+                    ConnectionSingleton.getInstance().reloadSubreddits();
+                    navigationView.getMenu().getItem(0).setTitle("Log in");
+                } else
+                    ConnectionSingleton.getInstance().login(MainActivity.this);
                 break;
+        }
+
+        String title = item.getTitle().toString();
+        if (item.getItemId() != R.id.login) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.container, SubredditFragment.newInstance(title))
+                    .commit();
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -110,9 +156,5 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public NavigationView getNavigationView() {
         return navigationView;
-    }
-
-    public static MainActivity getInstance() {
-        return instance;
     }
 }
