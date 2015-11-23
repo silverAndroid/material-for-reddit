@@ -10,12 +10,14 @@ public class ConstantMap {
     private static final String IMGUR = "imgur";
     private static final String FLICKR = "flickr";
     private static final String GFYCAT = "gfycat";
+    private static final String YOUTUBE = "youtube";
+    private static final String YOUTUBE_SHORT = "youtu.be";
     private static final String BMP = ".bmp";
     private static final String PNG = ".png";
     private static final String JPEG = ".jpg";
     private static final String GIF = ".gif";
     private static final String GIFV = ".gifv";
-    private static final String USER_AGENT = "User-Agent: android:com.reddit.material:v1.0.0 (by /u/silverAndroid)";
+    private static final String USER_AGENT = "android:com.reddit.material:v1.0.0 (by /u/silverAndroid)";
     private static HashMap<String, String> constantMap;
     private static ConstantMap instance;
 
@@ -44,6 +46,10 @@ public class ConstantMap {
 
     public boolean isGIF(String string) {
         return string.contains(GFYCAT) || string.contains(GIF) || string.contains(GIFV);
+    }
+
+    public boolean isYoutube(String string) {
+        return string.contains(YOUTUBE) || string.contains(YOUTUBE_SHORT);
     }
 
     public HashMap<String, String> getConstantMap() {
