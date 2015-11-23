@@ -6,17 +6,17 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 
 public class SubredditFragment extends Fragment {
 
     private static SubredditFragment instance;
     private SubredditAdapter adapter;
     private SwipeRefreshLayout refresh;
+    private ProgressBar loading;
 
     public static SubredditFragment newInstance() {
         SubredditFragment fragment = new SubredditFragment();
@@ -30,7 +30,7 @@ public class SubredditFragment extends Fragment {
     public static SubredditFragment newInstance(String subreddit) {
         SubredditFragment fragment = new SubredditFragment();
         Bundle bundle = new Bundle(1);
-        bundle.putString("r/", subreddit);
+        bundle.putString("r/", subreddit.equalsIgnoreCase("frontpage") ? "" : subreddit);
         fragment.setArguments(bundle);
         instance = fragment;
         return fragment;
@@ -50,8 +50,8 @@ public class SubredditFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_subreddit, container, false);
+        loading = (ProgressBar) view.findViewById(R.id.loading);
         refresh = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh);
-        refresh.setRefreshing(true);
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -65,7 +65,7 @@ public class SubredditFragment extends Fragment {
         });
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.rv);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        adapter = new SubredditAdapter(getContext());
+        adapter = new SubredditAdapter(getActivity());
         recyclerView.setAdapter(adapter);
         ConnectionSingleton.getInstance().getSubredditData(getArguments().getString("r/"));
         return view;
@@ -82,5 +82,9 @@ public class SubredditFragment extends Fragment {
 
     public SwipeRefreshLayout getSwipeRefreshLayout() {
         return refresh;
+    }
+
+    public ProgressBar getProgressBar() {
+        return loading;
     }
 }
