@@ -14,7 +14,7 @@ import android.widget.ProgressBar;
 public class SubredditFragment extends Fragment {
 
     private static SubredditFragment instance;
-    private SubredditAdapter adapter;
+    private PostAdapter adapter;
     private SwipeRefreshLayout refresh;
     private ProgressBar loading;
 
@@ -65,7 +65,7 @@ public class SubredditFragment extends Fragment {
         });
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.rv);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        adapter = new SubredditAdapter(getActivity());
+        adapter = new PostAdapter(getActivity());
         recyclerView.setAdapter(adapter);
         ConnectionSingleton.getInstance().getSubredditData(getArguments().getString("r/"));
         return view;
@@ -76,7 +76,7 @@ public class SubredditFragment extends Fragment {
         ConnectionSingleton.getInstance().getSubredditData(getArguments().getString("r/"));
     }
 
-    public SubredditAdapter getAdapter() {
+    public PostAdapter getAdapter() {
         return adapter;
     }
 
