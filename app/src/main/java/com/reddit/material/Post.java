@@ -5,32 +5,34 @@ import java.io.Serializable;
 /**
  * Created by Rushil Perera on 10/29/2015.
  */
-public class Post implements Serializable, VotingHelper {
+public class Post extends Thing implements Serializable, VotingHelper {
 
+    private final String selfTextHTML;
     private String domain;
     private String bannedBy;
     private String subreddit;
     private String suggestedSort;
     private String userReports;
     private String linkFlairText;
-    private String id;
     //    private String fromKind;
-    private int gilded;
     private boolean clicked;
     //    private String reportReasons;
-    private String author;
     private String media;
-    private int score;
     //    private String approvedBy;
-    private boolean over18;
     private boolean hidden;
     private String previewImageURL;
     private int numComments;
-    private String thumbnailURL;
-    private String subredditID;
-    private boolean hideScore;
+    private int vote;
     private double edited;
     private boolean saved;
+    private long createdUTC;
+    private String author;
+    private String subredditID;
+    private int score;
+    private int gilded;
+    private boolean over18;
+    private String thumbnailURL;
+    private boolean hideScore;
     //    private String removalReason;
     private boolean stickied;
     private String from;
@@ -40,56 +42,10 @@ public class Post implements Serializable, VotingHelper {
     private String url;
     private boolean quarantine;
     private String title;
-    private long createdUTC;
     private String distinguished;
     private String modReports;
     private boolean visited;
-    private int vote;
-    private final String selfText;
 //    private String numReports;
-
-    public Post(String domain, String bannedBy, String subreddit, String suggestedSort, String userReports, String
-            linkFlairText, int gilded, boolean clicked, String author, String media, int score, boolean over18,
-                boolean hidden, String previewImageURL, int numComments, String thumbnailURL, String subredditID,
-                boolean hideScore, boolean saved, boolean stickied, String from, String fromID, String permalink,
-                boolean locked, String name, String url, boolean quarantine, String title, long createdUTC, String
-                        distinguished, String modReports, boolean visited, int vote, String selfText) {
-        this.domain = domain;
-        this.bannedBy = bannedBy;
-        this.subreddit = subreddit;
-        this.suggestedSort = suggestedSort;
-        this.userReports = userReports;
-        this.linkFlairText = linkFlairText;
-        this.id = name;
-        this.gilded = gilded;
-        this.clicked = clicked;
-        this.author = author;
-        this.media = media;
-        this.score = score;
-        this.over18 = over18;
-        this.hidden = hidden;
-        this.previewImageURL = previewImageURL;
-        this.numComments = numComments;
-        this.thumbnailURL = thumbnailURL;
-        this.subredditID = subredditID;
-        this.hideScore = hideScore;
-        this.vote = vote;
-        this.selfText = selfText;
-        this.edited = 0.0;
-        this.saved = saved;
-        this.stickied = stickied;
-        this.from = from;
-        this.fromID = fromID;
-        this.permalink = permalink;
-        this.locked = locked;
-        this.url = url;
-        this.quarantine = quarantine;
-        this.title = title;
-        this.createdUTC = createdUTC;
-        this.distinguished = distinguished;
-        this.modReports = modReports;
-        this.visited = visited;
-    }
 
     public Post(String domain, String banned_by, String subreddit, String suggestedSort, String user_reports, String
             linkFlairText, int gilded, boolean clicked, String author, String media, int score, boolean over_18,
@@ -97,14 +53,14 @@ public class Post implements Serializable, VotingHelper {
                 boolean hide_score, double edited, boolean saved, boolean stickied, String from, String fromID,
                 String permalink, boolean locked, String name, String url, boolean quarantine, String title, long
                         created_utc, String distinguished, String mod_reports, boolean visited, int vote, String
-                        selfText) {
+                        selfTextHTML) {
+        super(name);
         this.domain = domain;
         bannedBy = banned_by;
         this.subreddit = subreddit;
         this.suggestedSort = suggestedSort;
         userReports = user_reports;
         this.linkFlairText = linkFlairText;
-        this.id = name;
         this.gilded = gilded;
         this.clicked = clicked;
         this.author = author;
@@ -132,7 +88,7 @@ public class Post implements Serializable, VotingHelper {
         modReports = mod_reports;
         this.visited = visited;
         this.vote = vote;
-        this.selfText = selfText;
+        this.selfTextHTML = selfTextHTML;
     }
 
     public String getDomain() {
@@ -157,10 +113,6 @@ public class Post implements Serializable, VotingHelper {
 
     public String getLinkFlairText() {
         return linkFlairText;
-    }
-
-    public String getID() {
-        return id;
     }
 
     public int getGilded() {
@@ -267,20 +219,16 @@ public class Post implements Serializable, VotingHelper {
         return visited;
     }
 
+    public String getSelfTextHTML() {
+        return selfTextHTML;
+    }
+
     @Override
     public void vote(int dir) {
-        ConnectionSingleton.getInstance().vote(id, dir);
+        ConnectionSingleton.getInstance().vote(getID(), dir);
     }
 
     public int getVote() {
         return vote;
-    }
-
-    public void setVote(int vote) {
-        this.vote = vote;
-    }
-
-    public String getSelfText() {
-        return selfText;
     }
 }

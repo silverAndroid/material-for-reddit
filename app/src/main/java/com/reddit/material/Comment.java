@@ -5,61 +5,39 @@ import org.json.JSONArray;
 /**
  * Created by Rushil Perera on 11/8/2015.
  */
-public class Comment implements VotingHelper {
-    private final String subredditID;
+public class Comment extends Thing implements VotingHelper {
+
     private final String linkID;
-    private final boolean saved;
-    private final String id;
-    private final int gilded;
     private final boolean archived;
-    private final String author;
-    private final int score;
-    private final String body;
-    private final double edited;
     private final String bodyHTML;
     private final boolean scoreHidden;
-    private final long createdUTC;
     private final String authorFlairText;
-    private final int vote;
     private String parentID;
     private JSONArray replies;
     private JSONArray userReports;
     private int depth;
+    private int vote;
+    private double edited;
+    private boolean saved;
+    private long createdUTC;
+    private String author;
+    private String subredditID;
+    private int score;
+    private int gilded;
 
     public Comment(String subredditID, String linkID, boolean saved, String id, int gilded, boolean archived, String
-            author, int score, String body, double edited, String bodyHTML, boolean scoreHidden, long createdUTC,
-                   String authorFlairText, int vote) {
+            author, int score, String bodyHTML, double edited, boolean scoreHidden, long createdUTC, String
+            authorFlairText, int vote, String parentID) {
+        super(id);
         this.subredditID = subredditID;
         this.linkID = linkID;
         this.saved = saved;
-        this.id = id;
         this.gilded = gilded;
         this.archived = archived;
         this.author = author;
         this.score = score;
-        this.body = body;
-        this.edited = edited;
         this.bodyHTML = bodyHTML;
-        this.scoreHidden = scoreHidden;
-        this.createdUTC = createdUTC;
-        this.authorFlairText = authorFlairText;
-        this.vote = vote;
-    }
-
-    public Comment(String subredditID, String linkID, boolean saved, String id, int gilded, boolean archived, String
-            author, int score, String body, double edited, String bodyHTML, boolean scoreHidden, long createdUTC,
-                   String authorFlairText, int vote, String parentID) {
-        this.subredditID = subredditID;
-        this.linkID = linkID;
-        this.saved = saved;
-        this.id = id;
-        this.gilded = gilded;
-        this.archived = archived;
-        this.author = author;
-        this.score = score;
-        this.body = body;
         this.edited = edited;
-        this.bodyHTML = bodyHTML;
         this.scoreHidden = scoreHidden;
         this.createdUTC = createdUTC;
         this.authorFlairText = authorFlairText;
@@ -79,10 +57,6 @@ public class Comment implements VotingHelper {
         return saved;
     }
 
-    public String getID() {
-        return id;
-    }
-
     public int getGilded() {
         return gilded;
     }
@@ -97,10 +71,6 @@ public class Comment implements VotingHelper {
 
     public int getScore() {
         return score;
-    }
-
-    public String getBody() {
-        return body;
     }
 
     public double isEdited() {
@@ -153,7 +123,7 @@ public class Comment implements VotingHelper {
 
     @Override
     public void vote(int dir) {
-        ConnectionSingleton.getInstance().vote(id, dir);
+        ConnectionSingleton.getInstance().vote(getID(), dir);
     }
 
     public String getParentID() {
