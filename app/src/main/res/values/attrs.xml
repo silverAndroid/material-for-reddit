@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="HorizontalProgressBar">
-        <attr name="max" format="integer"/>
-        <attr name="progress" format="integer"/>
-        <attr name="bar_height" format="integer"/>
-        <attr name="bar_color" format="color"/>
-    </declare-styleable>
-
     <!-- Declare custom theme attributes that allow changing which styles are
          used for button bars depending on the API level.
          ?android:attr/buttonBarStyle is new as of API 11 so this is
