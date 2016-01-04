@@ -4,12 +4,17 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.text.TextUtils;
+import android.text.format.DateUtils;
+import android.util.TypedValue;
 import android.view.View;
 import android.webkit.URLUtil;
 import android.widget.Button;
@@ -20,6 +25,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.common.util.UriUtil;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.reddit.material.libraries.google.CustomTabActivityHelper;
 
@@ -35,7 +41,7 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
     final TextView gilded;
     final TextView flair;
     final TextView nsfwTag;
-    final TextView selfText;
+    final HTMLMarkupTextView selfText;
     final SimpleDraweeView image;
     final ProgressBar loading;
     final CardView card;
@@ -72,7 +78,7 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
         card = (CardView) itemView.findViewById(R.id.card);
         upvote = (ImageButton) itemView.findViewById(R.id.btn_upvote);
         downvote = (ImageButton) itemView.findViewById(R.id.btn_downvote);
-        selfText = (TextView) itemView.findViewById(R.id.self_text);
+        selfText = (HTMLMarkupTextView) itemView.findViewById(R.id.self_text);
 
         LinearLayout linearLayout = (LinearLayout) itemView.findViewById(R.id.linear_layout);
         sendLayout = (LinearLayout) linearLayout.findViewById(R.id.include_send);
@@ -103,6 +109,150 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
         formatBulletList.setOnClickListener(this);
         formatNumberList = (ImageButton) sendLayout.findViewById(R.id.btn_number_list);
         formatNumberList.setOnClickListener(this);
+    }
+
+    public void init(final Post post) {
+        init(post, false, false);
+    }
+
+    public void init(final Post post, boolean ellipsize, boolean hideReply) {
+        String imageURL;
+        if (post.getPreviewImageURL() == null) {
+            if (post.getURL() == null) {
+                image.setVisibility(View.GONE);
+                loading.setVisibility(View.GONE);
+            } else {
+                setURL(imageURL = post.getURL());
+                if (post.isOver18()) {
+                    Uri nsfwPath = new Uri.Builder()
+                            .scheme(UriUtil.LOCAL_RESOURCE_SCHEME)
+                            .path(String.valueOf(R.drawable.nsfw_reddit_icon))
+                            .build();
+                    image.setImageURI(nsfwPath);
+                    loading.setVisibility(View.GONE);
+                    nsfwTag.setVisibility(View.VISIBLE);
+                } else {
+                    if (ConstantMap.getInstance().isImage(post.getURL())) {
+                        image.setVisibility(View.VISIBLE);
+                        loading.setVisibility(View.VISIBLE);
+                        ConnectionSingleton.getInstance().loadImage(imageURL, image, loading);
+                    } else {
+                        image.setVisibility(View.GONE);
+                        loading.setVisibility(View.GONE);
+                    }
+                    nsfwTag.setVisibility(View.GONE);
+                }
+            }
+        } else {
+            setURL(post.getURL());
+            if (post.isOver18()) {
+                Uri nsfwPath = new Uri.Builder()
+                        .scheme(UriUtil.LOCAL_RESOURCE_SCHEME)
+                        .path(String.valueOf(R.drawable.nsfw_reddit_icon))
+                        .build();
+                image.setImageURI(nsfwPath);
+                loading.setVisibility(View.GONE);
+                nsfwTag.setVisibility(View.VISIBLE);
+            } else {
+                if (ConstantMap.getInstance().isImage(post.getPreviewImageURL())) {
+                    image.setVisibility(View.VISIBLE);
+                    loading.setVisibility(View.VISIBLE);
+                } else {
+                    image.setVisibility(View.GONE);
+                    loading.setVisibility(View.GONE);
+                }
+                nsfwTag.setVisibility(View.GONE);
+                ConnectionSingleton.getInstance().loadImage(post.getPreviewImageURL(), image, loading);
+            }
+        }
+
+        title.setText(post.getTitle());
+        flair.setVisibility(post.getLinkFlairText() == null ? View.GONE : post.getLinkFlairText().equals
+                ("") ? View.GONE : View.VISIBLE);
+        lineOneInfo.setText(Html.fromHtml("<b><font size=\"20\">" + post.getScore() + "</font></b> pts " +
+                "<b>" + post.getNumComments() + "</b> comments by <b>" + post.getAuthor() + "</b>"));
+        source.setText(post.getDomain());
+        timeSubredditInfo.setText(Html.fromHtml("<b>" + DateUtils.getRelativeTimeSpanString(post
+                .getCreatedUTC() * 1000, System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS) + "</b> to " +
+                "r/<b>" + post.getSubreddit() + "</b>"));
+        gilded.setVisibility(post.getGilded() == 0 ? View.GONE : View.VISIBLE);
+        gilded.setText(String.format("%d", post.getGilded()));
+        flair.setText(post.getLinkFlairText());
+
+        if (!post.getSelfTextHTML().equals("")) {
+            if (ellipsize) {
+                selfText.setMaxLines(3);
+                selfText.setEllipsize(TextUtils.TruncateAt.END);
+            }
+            selfText.setVisibility(View.VISIBLE);
+            selfText.setHTMLText(post.getSelfTextHTML());
+        } else
+            selfText.setVisibility(View.GONE);
+
+        upvote.setSelected(post.getVote() == 1);
+        upvote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!Authentication.getInstance().isLoggedIn()) {
+                    Toast.makeText(activity, "You must be logged in to vote!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                upvote.setSelected(!upvote.isSelected());
+                downvote.setSelected(false);
+                post.vote(upvote.isSelected() ? 1 : 0);
+            }
+        });
+
+        downvote.setSelected(post.getVote() == -1);
+        downvote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!Authentication.getInstance().isLoggedIn()) {
+                    Toast.makeText(activity, "You must be logged in to vote!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                downvote.setSelected(!downvote.isSelected());
+                upvote.setSelected(false);
+                post.vote(downvote.isSelected() ? -1 : 0);
+            }
+        });
+
+        if (gilded.getVisibility() == View.VISIBLE) {
+            card.setCardBackgroundColor(Color.rgb(253, 221, 98));
+            int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, activity.getResources()
+                    .getDisplayMetrics());
+            card.setContentPadding(padding, padding, padding, padding);
+        } else if (post.isStickied()) {
+            card.setCardBackgroundColor(Color.rgb(164, 208, 95));
+            int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, activity.getResources()
+                    .getDisplayMetrics());
+            card.setContentPadding(padding, padding, padding, padding);
+        } else {
+            card.setCardBackgroundColor(Color.rgb(245, 243, 242));
+            card.setContentPadding(0, 0, 0, 0);
+        }
+
+        submit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendLayout.setVisibility(View.GONE);
+                ConnectionSingleton.getInstance().comment(editMessage.getText().toString(), post.getID(),
+                        editMessage);
+            }
+        });
+
+        reply.setVisibility(hideReply ? View.GONE : View.VISIBLE);
+
+        itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(activity, CommentActivity.class);
+                intent.putExtra("post", post);
+                activity.startActivity(intent);
+            }
+        });
     }
 
     public void setURL(final String url) {
