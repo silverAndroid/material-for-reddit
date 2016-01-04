@@ -169,7 +169,6 @@ public class ConnectionSingleton {
         final PersistentCookieStore cookieStore = new PersistentCookieStore(context);
         subredditClient.setCookieStore(cookieStore);
         subredditClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
-//        permalink = "/r/sircmpwn/comments/3t925b/testing_commenting";
         subredditClient.get(context, "https://www.reddit.com" + permalink.replace("/?ref=search_posts", "") + "/.json",
                 new JsonHttpResponseHandler() {
                     @Override
