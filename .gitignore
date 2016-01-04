@@ -1,8 +1,18 @@
 .gradle
 /local.properties
-/.idea/workspace.xml
-/.idea/libraries
-.DS_Store
+/.idea
 /build
-/captures
+#built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# Android Studio
+*.iml
+*.zip
 /app/src/main/java/com/reddit/material/APIKey.java
