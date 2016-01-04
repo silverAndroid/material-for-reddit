@@ -2,25 +2,25 @@ package com.reddit.material;
 
 import android.support.annotation.NonNull;
 
-import java.util.Comparator;
-
 /**
  * Created by Rushil Perera on 11/10/2015.
  */
-public class Subreddit implements Comparable<Subreddit> {
+public class Subreddit extends Thing implements Comparable<Subreddit> {
+
     private final String name;
     private final String description;
     private final String publicDescription;
     private final int commentScoreHideMins;
     private final String subredditVisibility;
     private final boolean over18;
-    private final int subscribers;
+    private final long subscribers;
     private final long createdUTC;
-    private final String id;
+    private String title;
 
-    public Subreddit(String name, String id, String description, String publicDescription, int commentScoreHideMins,
-                     String subredditVisibility, boolean over18, int subscribers, long createdUTC) {
-        this.id = id;
+    public Subreddit(String name, String title, String id, String description, String publicDescription, int
+            commentScoreHideMins, String subredditVisibility, boolean over18, long subscribers, long createdUTC) {
+        super(id);
+        this.title = title;
         this.name = name.toLowerCase();
         this.description = description;
         this.publicDescription = publicDescription;
@@ -55,7 +55,7 @@ public class Subreddit implements Comparable<Subreddit> {
         return over18;
     }
 
-    public int getSubscribers() {
+    public long getSubscribers() {
         return subscribers;
     }
 
@@ -63,13 +63,12 @@ public class Subreddit implements Comparable<Subreddit> {
         return createdUTC;
     }
 
-    public String getId() {
-        return id;
-    }
-
     @Override
     public int compareTo(@NonNull Subreddit another) {
         return getName().compareTo(another.getName());
     }
 
+    public String getTitle() {
+        return title;
+    }
 }
