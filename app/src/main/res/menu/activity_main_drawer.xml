@@ -3,6 +3,6 @@
 
     <item
         android:id="@+id/login"
-        android:title="@string/action_log_in"/>
+        android:title="@string/action_log_in" />
 
 </menu>

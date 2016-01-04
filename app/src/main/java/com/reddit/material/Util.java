@@ -1,8 +1,5 @@
 package com.reddit.material;
 
-import android.text.Html;
-import android.text.Spanned;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 

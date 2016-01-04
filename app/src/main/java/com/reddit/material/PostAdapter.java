@@ -1,21 +1,10 @@
 package com.reddit.material;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.graphics.Color;
-import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
-import android.text.Html;
-import android.text.TextUtils;
-import android.text.format.DateUtils;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
-import android.widget.Toast;
-
-import com.facebook.common.util.UriUtil;
 
 import java.util.ArrayList;
 

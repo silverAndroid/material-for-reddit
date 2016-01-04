@@ -8,7 +8,6 @@ import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerView;
-import com.google.android.youtube.player.YouTubeStandalonePlayer;
 
 public class YouTubeActivity extends YouTubeBaseActivity {
 

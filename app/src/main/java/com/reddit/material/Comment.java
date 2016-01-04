@@ -27,7 +27,7 @@ public class Comment extends Thing implements VotingHelper {
 
     public Comment(String subredditID, String linkID, boolean saved, String id, int gilded, boolean archived, String
             author, int score, String bodyHTML, double edited, boolean scoreHidden, long createdUTC, String
-            authorFlairText, int vote, String parentID) {
+                           authorFlairText, int vote, String parentID) {
         super(id);
         this.subredditID = subredditID;
         this.linkID = linkID;

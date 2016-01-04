@@ -26,6 +26,10 @@ public class CommentActivity extends AppCompatActivity {
         return loading;
     }
 
+    public static SwipeRefreshLayout getSwipeRefreshLayout() {
+        return refresh;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,9 +78,5 @@ public class CommentActivity extends AppCompatActivity {
     public void refresh() {
         String postPermalink = adapter.clearData();
         ConnectionSingleton.getInstance().getLinkData(postPermalink);
-    }
-
-    public static SwipeRefreshLayout getSwipeRefreshLayout() {
-        return refresh;
     }
 }
