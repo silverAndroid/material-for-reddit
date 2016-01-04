@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="8dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_toLeftOf="@+id/time"
+        android:text="Nexus 6P"
+        android:textColor="#000"
+        android:textSize="20sp"/>
+
+    <LinearLayout
+        android:id="@+id/subreddit_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/title">
+
+        <Button
+            android:id="@+id/btn_subscribe"
+            style="?attr/buttonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="4dp"
+            android:layout_marginTop="4dp"
+            android:text="Subscribe"/>
+
+        <TextView
+            android:id="@+id/rSubreddit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:text="r/Nexus6P"/>
+
+        <TextView
+            android:id="@+id/subscriberCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:text="18,312 subscribers"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/subreddit_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/subreddit_info"
+        android:text="A subreddit for the latest news and discussions regarding the Huawei Nexus 6P!"
+        android:textColor="#000"
+        android:textSize="16sp"/>
+</RelativeLayout>
