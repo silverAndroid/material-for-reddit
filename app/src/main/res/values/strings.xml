@@ -48,6 +48,22 @@
     <string name="url_hint">URL</string>
     <string name="error_invalid_url">Invalid URL</string>
     <string name="menu_search">Search</string>
-    <string name="search_hint">Search on Reddit</string>
     <string name="title_activity_search">SearchActivity</string>
+    <string name="search_reddit">Search Reddit</string>
+    <string name="subreddit_prompt">Subreddit</string>
+    <string name="author_prompt">Author</string>
+    <string name="site_prompt">Site</string>
+    <string name="url_prompt">URL</string>
+    <string name="selftext_prompt">Self Text</string>
+    <string name="search_subreddit_info">The submission\'s subreddit.</string>
+    <string name="search_author_info">The user who submitted the post.</string>
+    <string name="search_site_info">The domain of the submitted URL</string>
+    <string name="search_url_info">The submission\'s URL (the website address)</string>
+    <string name="search_selftext_info">The bodyHTML of the post.</string>
+    <string name="flair_prompt">Flair</string>
+    <string name="search_flair_info">The text on the link flair of the post.</string>
+    <string name="nsfw_prompt">NSFW</string>
+    <string name="self_prompt">Self Post</string>
+    <string name="filters_subheading">FILTERS (OPTIONAL)</string>
+    <string name="title_activity_search_results">SearchResultsActivity</string>
 </resources>
