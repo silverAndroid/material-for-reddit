@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -20,6 +21,7 @@ public class SearchResultsActivity extends AppCompatActivity {
     private static ThingAdapter adapter;
     private static ProgressBar progressBar;
     private SearchFragment fragment;
+    private String query;
 
     public static ThingAdapter getAdapter() {
         return adapter;
@@ -40,13 +42,13 @@ public class SearchResultsActivity extends AppCompatActivity {
         progressBar = (ProgressBar) findViewById(R.id.loading);
         hideProgressBar();
 
-        EditText searchBox = (EditText) toolbar.findViewById(R.id.search_box);
+        final EditText searchBox = (EditText) toolbar.findViewById(R.id.search_box);
         searchBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (getSupportFragmentManager().findFragmentById(R.id.container) == null) {
                     getSupportFragmentManager().beginTransaction().add(R.id.container, (fragment = SearchFragment
-                            .newInstance())).addToBackStack("filters").commit();
+                            .newInstance(query))).addToBackStack("filters").commit();
                 }
             }
         });
@@ -56,23 +58,23 @@ public class SearchResultsActivity extends AppCompatActivity {
                 boolean handled = false;
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                     handled = true;
-                    String filters = fragment.getFilters();
-                    String query = v.getText().toString();
-                    if (!filters.isEmpty())
-                        query += " " + filters;
-                    adapter.clear();
-                    getSupportFragmentManager().beginTransaction().remove(fragment).commit();
-                    progressBar.setVisibility(View.VISIBLE);
-                    ConnectionSingleton.getInstance().search(query);
+                    search(v.getText().toString());
                 }
                 return handled;
+            }
+        });
+
+        ImageButton searchButton = (ImageButton) toolbar.findViewById(R.id.search_button);
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                search(searchBox.getText().toString());
             }
         });
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.search_results_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
         recyclerView.setAdapter(adapter = new ThingAdapter(this));
-        ConnectionSingleton.getInstance().search(getIntent().getStringExtra("query"));
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -95,5 +97,16 @@ public class SearchResultsActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void search(String query) {
+        String filters = fragment.getFilters();
+        if (!filters.isEmpty())
+            query += " " + filters;
+        this.query = query;
+        adapter.clear();
+        getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+        progressBar.setVisibility(View.VISIBLE);
+        ConnectionSingleton.getInstance().search(query);
     }
 }
