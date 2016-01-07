@@ -1,12 +1,15 @@
 package com.reddit.material;
 
 import android.app.Activity;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * Created by Rushil Perera on 1/1/2016.
@@ -26,7 +29,7 @@ public class ThingAdapter extends RecyclerView.Adapter {
         View v;
         if (viewType == 0) {
             v = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_subreddit, parent, false);
-            return new SubredditViewHolder(v);
+            return new SubredditViewHolder(v, activity);
         }
         v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_thread_subreddit, parent, false);
         return new PostViewHolder(v, activity);
@@ -39,13 +42,14 @@ public class ThingAdapter extends RecyclerView.Adapter {
             Subreddit subreddit = (Subreddit) things.get(position);
             holder.title.setText(subreddit.getTitle());
             holder.subscribe.setVisibility(Authentication.getInstance().isLoggedIn() ? View.VISIBLE : View.GONE);
+            holder.subscribe.setText(subreddit.isSubscriber() ? "Unsubscribe" : "Subscribe");
             holder.rSubreddit.setText(String.format("r/%s", subreddit.getName()));
             holder.subscribersCount.setText(String.format("%d subscribers", subreddit.getSubscribers()));
-            holder.description.setText(subreddit.getDescription());
+            holder.description.setHTMLText(subreddit.getPublicDescription());
         } else if (holderParent instanceof PostViewHolder) {
             PostViewHolder holder = (PostViewHolder) holderParent;
             Post post = (Post) things.get(position);
-            holder.init(post, true, true);
+            holder.init(post, true, true, true);
         }
     }
 
@@ -66,6 +70,7 @@ public class ThingAdapter extends RecyclerView.Adapter {
     public void addItems(ArrayList<Thing> thingArrayList) {
         int initialSize = things.size();
         things.addAll(thingArrayList);
+        Collections.sort(things);
         notifyItemRangeInserted(initialSize, thingArrayList.size());
     }
 
