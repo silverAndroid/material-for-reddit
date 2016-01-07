@@ -7,6 +7,7 @@ import android.graphics.drawable.Animatable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.preference.PreferenceManager;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Menu;
@@ -18,6 +19,7 @@ import android.widget.ProgressBar;
 import android.widget.VideoView;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.backends.pipeline.PipelineDraweeControllerBuilder;
 import com.facebook.drawee.controller.BaseControllerListener;
 import com.facebook.drawee.controller.ControllerListener;
 import com.facebook.drawee.interfaces.DraweeController;
@@ -47,6 +49,7 @@ import java.net.MalformedURLException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -113,6 +116,10 @@ public class ConnectionSingleton {
     }
 
     public void getSubreddits() {
+        getSubreddits(true);
+    }
+
+    public void getSubreddits(final boolean loadFirstSubreddit) {
         String accessToken = Authentication.getInstance().getAccessToken();
         final ArrayList<Subreddit> subredditsList = new ArrayList<>();
         Ion.with(context).load(accessToken.isEmpty() ? "https://www.reddit.com/subreddits/default/.json?limit=50" :
@@ -147,11 +154,17 @@ public class ConnectionSingleton {
                                 }
                             }
                         }
-                        Collections.sort(subredditsList);
+                        Collections.sort(subredditsList, new Comparator<Subreddit>() {
+                            @Override
+                            public int compare(Subreddit lhs, Subreddit rhs) {
+                                return lhs.getName().compareTo(rhs.getName());
+                            }
+                        });
                         for (Subreddit subreddit : subredditsList) {
                             subredditsMenu.add(subreddit.getName());
                         }
-                        MainActivity.getInstance().onNavigationItemSelected(subredditsMenu.getItem(0));
+                        if (loadFirstSubreddit)
+                            MainActivity.getInstance().onNavigationItemSelected(subredditsMenu.getItem(0));
                     }
                 });
     }
@@ -174,18 +187,19 @@ public class ConnectionSingleton {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
                         try {
+                            JSONArray postJSON = response.getJSONObject(0).getJSONObject("data").getJSONArray
+                                    ("children");
+                            post[0] = Util.generatePost(postJSON.getJSONObject(0).getJSONObject("data"));
+                            CommentActivity.getAdapter().setPost(post[0]);
                             JSONArray commentsJSON = response.getJSONObject(1).getJSONObject("data").getJSONArray
                                     ("children");
                             for (int i = 0; i < commentsJSON.length(); i++) {
-                                String kind = commentsJSON.getJSONObject(i).getString("kind");
                                 JSONObject commentJSON = commentsJSON.getJSONObject(i).getJSONObject("data");
-                                if (kind.equals("t1")) {
-                                    Comment comment = Util.generateComment(commentJSON);
+                                Comment comment = Util.generateComment(commentJSON);
+                                if (comment != null)
                                     comments.add(comment);
-                                } else if (kind.equals("t3")) {
-                                    post[0] = Util.generatePost(commentJSON);
-                                    CommentActivity.getAdapter().setPost(post[0]);
-                                }
+                                else
+                                    Log.d(TAG, "onSuccess: " + commentJSON);
                             }
                             CommentActivity.getAdapter().addComments(comments);
 
@@ -244,8 +258,13 @@ public class ConnectionSingleton {
         imageView.setController(controller);
     }
 
-    public void loadImage(final String url, final ZoomableDraweeView imageView, final ProgressBar loading) {
-        if (url.contains("https://www.flickr.com")) {
+    public void loadImage(String url, ZoomableDraweeView imageView, ProgressBar loading) {
+        loadImage(null, url, imageView, loading);
+    }
+
+    public void loadImage(final String lowResURL, final String url, final ZoomableDraweeView imageView, final ProgressBar
+            loading) {
+        if (url.matches("https?://www.flickr.com.*")) {
             boolean modifyURL = true;
             for (String constant : ConstantMap.getInstance().getConstantMap().keySet())
                 if (url.endsWith(constant)) {
@@ -254,8 +273,8 @@ public class ConnectionSingleton {
                 }
             if (modifyURL) {
                 Ion.with(context).load("https://www.flickr.com/services/rest/?method=flickr.photos" +
-                        ".search&format=json&api_key=9e79c7a853db58eec8122a6e11e58713&user_id=" + url
-                        .split("/")[4] + "&nojsoncallback=1")
+                        ".search&format=json&api_key=" + APIKey.getInstance().getAPIKey(APIKey.FLICKR_KEY) +
+                        "&user_id=" + url.split("/")[4] + "&nojsoncallback=1")
                         .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
                         .group("flickr").asJsonObject().setCallback(new FutureCallback<JsonObject>() {
                     @Override
@@ -275,24 +294,35 @@ public class ConnectionSingleton {
                                 break;
                             }
                         }
-                        loadImage(modifiedURL.getUrl(), imageView, loading);
+                        loadImage(lowResURL, modifiedURL.getUrl(), imageView, loading);
                     }
                 });
             }
             return;
         } else if (url.contains("http://imgur.com")) {
-            Ion.with(context).load("https://api.imgur.com/3/image/" + url.split("/")[3])
-                    .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
-                    .addHeader("Authorization", "Client-ID " + APIKey.getInstance().getAPIKey(APIKey
-                            .IMGUR_CLIENT_ID_KEY))
-                    .asJsonObject()
-                    .setCallback(new FutureCallback<JsonObject>() {
-                        @Override
-                        public void onCompleted(Exception e, JsonObject result) {
-                            String url = result.getAsJsonObject("data").getAsJsonPrimitive("link").getAsString();
-                            loadImage(url, imageView, loading);
-                        }
-                    });
+            AsyncHttpClient imageClient = new AsyncHttpClient();
+            imageClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+            imageClient.addHeader("Authorization", "Client-ID " + APIKey.getInstance().getAPIKey(APIKey
+                    .IMGUR_CLIENT_ID_KEY));
+            imageClient.get("https://api.imgur.com/3/image/" + url.split("/")[3], new JsonHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    try {
+                        String url = response.getJSONObject("data").getString("link");
+                        String[] linkArray = url.split("/");
+                        String[] lowResArray = linkArray[3].split("\\.");
+                        String lowResURL = "https://i.imgur.com/" + lowResArray[0] + "t." + lowResArray[1];
+                        loadImage(lowResURL, url, imageView, loading);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                    Log.d(TAG, "onFailure: " + url);
+                }
+            });
             return;
         }
 
@@ -308,6 +338,15 @@ public class ConnectionSingleton {
             }
         };
 
+        ImageRequest lowResRequest = null;
+        if (lowResURL != null)
+            lowResRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(lowResURL))
+                    .setResizeOptions(new ResizeOptions(2560, 2560))
+                    .setProgressiveRenderingEnabled(true)
+                    .setLocalThumbnailPreviewsEnabled(true)
+                    .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
+                    .setAutoRotateEnabled(true)
+                    .build();
         ImageRequest request = ImageRequestBuilder.newBuilderWithSource(Uri.parse(url))
                 .setResizeOptions(new ResizeOptions(2560, 2560))
                 .setProgressiveRenderingEnabled(true)
@@ -315,13 +354,109 @@ public class ConnectionSingleton {
                 .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
                 .setAutoRotateEnabled(true)
                 .build();
-        DraweeController controller = Fresco.newDraweeControllerBuilder()
+        PipelineDraweeControllerBuilder controllerBuilder = Fresco.newDraweeControllerBuilder()
                 .setImageRequest(request)
                 .setTapToRetryEnabled(true)
                 .setOldController(imageView.getController())
-                .setControllerListener(listener)
-                .build();
+                .setControllerListener(listener);
+        if (lowResRequest != null)
+            controllerBuilder.setLowResImageRequest(lowResRequest);
+        DraweeController controller = controllerBuilder.build();
         imageView.setController(controller);
+    }
+
+    public void loadAlbum(final String url) {
+        String[] urlArray = url.split("/");
+        String apiURL = urlArray[3].equals("gallery") ? "https://api.imgur.com/3/gallery/album/" + urlArray[4] :
+                "https://api.imgur.com/3/album/" + urlArray[4];
+        final ArrayList<Image> images = new ArrayList<>();
+        AsyncHttpClient imageAlbumClient = new AsyncHttpClient();
+        imageAlbumClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+        imageAlbumClient.addHeader("Authorization", "Client-ID " + APIKey.getInstance().getAPIKey(APIKey
+                .IMGUR_CLIENT_ID_KEY));
+        imageAlbumClient.get(context, apiURL, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                try {
+                    JSONArray imagesJSON = response.getJSONObject("data").getJSONArray("images");
+                    for (int i = 0; i < imagesJSON.length(); i++) {
+                        JSONObject imageJSON = imagesJSON.getJSONObject(i);
+                        Image image = new Image(imageJSON.getString("title"), imageJSON.getString("link"), imageJSON
+                                .getInt("width"), imageJSON.getInt("height"));
+                        images.add(image);
+                    }
+                    ImageGalleryAdapter adapter;
+                    ViewPager pager;
+                    (adapter = ImageGalleryActivity.getAdapter()).addAll(images);
+                    (pager = ImageGalleryActivity.getPager()).setAdapter(adapter);
+                    ImageGalleryActivity.getIndicator().setViewPager(pager);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                AsyncHttpClient imageClient = new AsyncHttpClient();
+                imageClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+                imageClient.addHeader("Authorization", "Client-ID " + APIKey.getInstance().getAPIKey(APIKey
+                        .IMGUR_CLIENT_ID_KEY));
+                imageClient.get("https://api.imgur.com/3/image/" + url.split("/")[4], new JsonHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                        try {
+                            JSONObject imageJSON = response.getJSONObject("data");
+                            Image image = Util.generateImage(imageJSON);
+                            images.add(image);
+
+                            ImageGalleryAdapter adapter;
+                            ViewPager pager;
+                            (adapter = ImageGalleryActivity.getAdapter()).addAll(images);
+                            (pager = ImageGalleryActivity.getPager()).setAdapter(adapter);
+                            ImageGalleryActivity.getIndicator().setViewPager(pager);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                        Log.d(TAG, "onFailure: String " + url);
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                AsyncHttpClient imageClient = new AsyncHttpClient();
+                imageClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+                imageClient.addHeader("Authorization", "Client-ID " + APIKey.getInstance().getAPIKey(APIKey
+                        .IMGUR_CLIENT_ID_KEY));
+                imageClient.get("https://api.imgur.com/3/image/" + url.split("/")[4], new JsonHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                        try {
+                            JSONObject imageJSON = response.getJSONObject("data");
+                            Image image = Util.generateImage(imageJSON);
+                            images.add(image);
+
+                            ImageGalleryAdapter adapter;
+                            ViewPager pager;
+                            (adapter = ImageGalleryActivity.getAdapter()).addAll(images);
+                            (pager = ImageGalleryActivity.getPager()).setAdapter(adapter);
+                            ImageGalleryActivity.getIndicator().setViewPager(pager);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                        Log.d(TAG, "onFailure: JSONObject " + url);
+                    }
+                });
+            }
+        });
     }
 
     public void loadGIF(String url, final VideoView videoView, final ProgressBar loading, final String tag) {
@@ -416,17 +551,19 @@ public class ConnectionSingleton {
         final boolean[] postsComplete = {false};
 
         AsyncHttpClient subredditsClient = new AsyncHttpClient();
+        final PersistentCookieStore cookieStore = new PersistentCookieStore(context);
+        subredditsClient.setCookieStore(cookieStore);
         subredditsClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
         HashMap<String, String> bParams = new HashMap<>();
         bParams.put("sort", "relevance");
         bParams.put("q", query);
+        Log.d(TAG, "search: " + Authentication.getInstance().getAccessToken());
         RequestParams parameters = new RequestParams(bParams);
         subredditsClient.get(context, "https://www.reddit.com/subreddits/search.json", parameters, new
                 JsonHttpResponseHandler() {
 
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                        Log.d(TAG, "onSuccess: " + response.toString());
                         try {
                             JSONArray subredditsArray = response.getJSONObject("data").getJSONArray("children");
                             for (int i = 0; i < subredditsArray.length(); i++) {
