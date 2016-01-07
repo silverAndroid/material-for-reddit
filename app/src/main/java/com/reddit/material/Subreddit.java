@@ -1,11 +1,9 @@
 package com.reddit.material;
 
-import android.support.annotation.NonNull;
-
 /**
  * Created by Rushil Perera on 11/10/2015.
  */
-public class Subreddit extends Thing implements Comparable<Subreddit> {
+public class Subreddit extends Thing {
 
     private final String name;
     private final String description;
@@ -15,12 +13,15 @@ public class Subreddit extends Thing implements Comparable<Subreddit> {
     private final boolean over18;
     private final long subscribers;
     private final long createdUTC;
+    private final boolean isSubscriber;
     private String title;
 
     public Subreddit(String name, String title, String id, String description, String publicDescription, int
-            commentScoreHideMins, String subredditVisibility, boolean over18, long subscribers, long createdUTC) {
+            commentScoreHideMins, String subredditVisibility, boolean over18, long subscribers, long createdUTC,
+                     boolean isSubscriber) {
         super(id);
         this.title = title;
+        this.isSubscriber = isSubscriber;
         this.name = name.toLowerCase();
         this.description = description;
         this.publicDescription = publicDescription;
@@ -63,12 +64,11 @@ public class Subreddit extends Thing implements Comparable<Subreddit> {
         return createdUTC;
     }
 
-    @Override
-    public int compareTo(@NonNull Subreddit another) {
-        return getName().compareTo(another.getName());
-    }
-
     public String getTitle() {
         return title;
+    }
+
+    public boolean isSubscriber() {
+        return isSubscriber;
     }
 }
