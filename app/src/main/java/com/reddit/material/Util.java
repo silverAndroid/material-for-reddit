@@ -1,5 +1,14 @@
 package com.reddit.material;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import android.support.customtabs.CustomTabsIntent;
+import android.util.Log;
+
+import com.reddit.material.libraries.google.CustomTabActivityHelper;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -60,14 +69,89 @@ public class Util {
         try {
             Subreddit subreddit;
             subreddit = new Subreddit(object.getString("display_name"), object.getString("title"), object.getString
-                    ("name"), object.getString("public_description"), object.getString("public_description"), object
+                    ("name"), object.getString("description_html"), object.getString("public_description_html"), object
                     .isNull("comment_score_hide_mins") ? 0 : object.getInt("comment_score_hide_mins"), object.getString
                     ("subreddit_type"), !object.isNull("over18") && object.getBoolean("over18"), object.isNull
-                    ("subscribers") ? 0 : object.getLong("subscribers"), object.getLong("created_utc"));
+                    ("subscribers") ? 0 : object.getLong("subscribers"), object.getLong("created_utc"), !object.isNull
+                    ("user_is_subscriber") && object.getBoolean("user_is_subscriber"));
             return subreddit;
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static Image generateImage(JSONObject object) {
+        Image image;
+        try {
+            image = new Image(object.getString("title"), object.getString("link"),
+                    object.getInt("width"), object.getInt("height"));
+            String url = image.getUrl();
+            String[] linkArray = url.split("/");
+            String[] lowResArray = linkArray[3].split("\\.");
+            String lowResURL = "https://i.imgur.com/" + lowResArray[0] + "t." + lowResArray[1];
+            image.setLowResURL(lowResURL);
+            return image;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void linkClicked(Activity activity, String url) {
+        linkClicked(activity, url, false);
+    }
+
+    public static void linkClicked(Activity activity, String url, boolean forceBrowser) {
+        if (forceBrowser)
+            loadThroughBrowser(activity, url);
+        else {
+            if (ConstantMap.getInstance().isYoutube(url)) {
+                Intent intent = new Intent(activity, YouTubeActivity.class);
+                intent.putExtra("url", url);
+                activity.startActivity(intent);
+            } else if (ConstantMap.getInstance().isGIF(url)) {
+                Intent intent = new Intent(activity, VideoActivity.class);
+                intent.putExtra("url", url);
+                activity.startActivity(intent);
+            } else if (ConstantMap.getInstance().isGallery(url)) {
+                Intent intent = new Intent(activity, ImageGalleryActivity.class);
+                intent.putExtra("albumURL", url);
+                activity.startActivity(intent);
+            } else if (ConstantMap.getInstance().isImage(url)) {
+                Intent intent = new Intent(activity, ImageActivity.class);
+                intent.putExtra("url", url);
+                activity.startActivity(intent);
+            } else if (ConstantMap.getInstance().isReddit(url)) {
+                String redditPath = url.replaceFirst("https?://(www\\.)?redd.?it(.com)?/", "");
+                Log.i(TAG, "linkClicked: " + redditPath);
+                String[] redditPathArray = redditPath.split("/");
+                if (redditPathArray.length > 2) {
+                    String redditCategory = redditPath.split("/")[2];
+                    if (redditCategory.equals("comments")) {
+                        Intent intent = new Intent(activity, CommentActivity.class);
+                        intent.putExtra("permalink", "/" + redditPath);
+                        activity.startActivity(intent);
+                    }
+                } else {
+                    Intent intent = new Intent(activity, MainActivity.class);
+                    intent.putExtra("subreddit", redditPath.substring(2));
+                    activity.startActivity(intent);
+                }
+            } else {
+                loadThroughBrowser(activity, url);
+            }
+        }
+    }
+
+    private static void loadThroughBrowser(Activity activity, String url) {
+        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            builder.setToolbarColor(activity.getResources().getColor(R.color.colorPrimary, null));
+        } else {
+            builder.setToolbarColor(activity.getResources().getColor(R.color.colorPrimary));
+        }
+        builder.setShowTitle(true);
+        CustomTabActivityHelper.openCustomTab(activity, builder.build(), Uri.parse(url), null);
     }
 }
