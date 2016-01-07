@@ -38,12 +38,17 @@ public class CommentActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        Post post = (Post) getIntent().getSerializableExtra("post");
+        Post post = null;
+        String permalink = "";
+        if (getIntent().hasExtra("post"))
+            post = (Post) getIntent().getSerializableExtra("post");
+        else if (getIntent().hasExtra("permalink"))
+            permalink = getIntent().getStringExtra("permalink");
 
         loading = (ProgressBar) findViewById(R.id.loading);
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.rv);
         recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
-        recyclerView.setAdapter(adapter = new CommentAdapter(post, this));
+        recyclerView.setAdapter(adapter = new CommentAdapter(post, CommentActivity.this));
         refresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -51,7 +56,7 @@ public class CommentActivity extends AppCompatActivity {
                 refresh();
             }
         });
-        ConnectionSingleton.getInstance().getLinkData(post.getPermalink());
+        ConnectionSingleton.getInstance().getLinkData(post == null ? permalink : post.getPermalink());
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {

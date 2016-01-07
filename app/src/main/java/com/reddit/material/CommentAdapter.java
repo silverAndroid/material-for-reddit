@@ -43,9 +43,9 @@ public class CommentAdapter extends RecyclerView.Adapter {
         if (holderParent instanceof PostViewHolder) {
             final PostViewHolder holder = (PostViewHolder) holderParent;
             holder.init(post);
-        } else if (holderParent instanceof CommentViewHolder) {
+        } else if (holderParent instanceof CommentViewHolder && comments.size() > 0) {
             final CommentViewHolder holder = (CommentViewHolder) holderParent;
-            holder.init(comments.get(position - 1));
+            holder.init(comments.get(post != null ? position - 1 : position));
         }
     }
 
@@ -56,7 +56,7 @@ public class CommentAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemViewType(int position) {
-        return position == 0 ? 1 : 0;
+        return position == 0 && post != null ? 1 : 0;
     }
 
     public Post getPost() {
@@ -65,7 +65,7 @@ public class CommentAdapter extends RecyclerView.Adapter {
 
     public void setPost(Post post) {
         this.post = post;
-        notifyItemChanged(0);
+        notifyDataSetChanged();
     }
 
     public void addComment(Comment comment) {
