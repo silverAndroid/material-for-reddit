@@ -262,8 +262,8 @@ public class ConnectionSingleton {
         loadImage(null, url, imageView, loading);
     }
 
-    public void loadImage(final String lowResURL, final String url, final ZoomableDraweeView imageView, final ProgressBar
-            loading) {
+    public void loadImage(final String lowResURL, final String url, final ZoomableDraweeView imageView, final
+    ProgressBar loading) {
         if (url.matches("https?://www.flickr.com.*")) {
             boolean modifyURL = true;
             for (String constant : ConstantMap.getInstance().getConstantMap().keySet())
@@ -557,7 +557,6 @@ public class ConnectionSingleton {
         HashMap<String, String> bParams = new HashMap<>();
         bParams.put("sort", "relevance");
         bParams.put("q", query);
-        Log.d(TAG, "search: " + Authentication.getInstance().getAccessToken());
         RequestParams parameters = new RequestParams(bParams);
         subredditsClient.get(context, "https://www.reddit.com/subreddits/search.json", parameters, new
                 JsonHttpResponseHandler() {
