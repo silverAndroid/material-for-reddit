@@ -39,9 +39,7 @@ public class YouTubeActivity extends YouTubeBaseActivity {
             public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean
                     restored) {
                 if (!restored) {
-                    Log.d(TAG, "onInitializationSuccess: " + url);
                     if (url.contains("youtube.com")) {
-                        Log.d(TAG, "YouTube ID = " + url.split("(v=)")[1]);
                         youTubePlayer.cueVideo(url.split("(v=)")[1].substring(0, 11));
                     } else if (url.contains("youtu.be")) {
                         String[] array = url.split("t=");
@@ -70,7 +68,7 @@ public class YouTubeActivity extends YouTubeBaseActivity {
         int time = 0;
         Log.d(TAG, "getTimeInMilliseconds: " + Arrays.toString(times));
         for (int i = times.length - 1; i >= 0; i--) {
-            Log.d(TAG, "getTimeInMilliseconds: " + time + ", " + times[i] + " * " + Math.pow(60, times.length - 1 - i));
+            time += Integer.parseInt(times[i]) * Math.pow(60, times.length - 1 - i);
         }
         return time * 1000;
     }
