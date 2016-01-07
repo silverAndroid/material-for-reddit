@@ -69,7 +69,7 @@
             android:indeterminate="false" />
     </RelativeLayout>
 
-    <com.reddit.material.HTMLMarkupTextView
+    <com.reddit.material.custom.HTMLMarkupTextView
         android:id="@+id/self_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -78,7 +78,6 @@
         android:layout_marginTop="8dp"
         android:autoLink="all"
         android:linksClickable="true"
-        android:text="@string/dummy_self_text"
         android:textColor="#000000" />
 
     <TextView

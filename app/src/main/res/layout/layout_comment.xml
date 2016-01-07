@@ -56,13 +56,12 @@
                     android:textColor="#000000" />
             </LinearLayout>
 
-            <com.reddit.material.HTMLMarkupTextView
+            <com.reddit.material.custom.HTMLMarkupTextView
                 android:id="@+id/text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:linksClickable="true"
-                android:text="@string/dummy_comment"
                 android:textColor="#000000"
                 android:textSize="15sp" />
         </LinearLayout>

@@ -47,7 +47,7 @@
             android:text="18,312 subscribers" />
     </LinearLayout>
 
-    <TextView
+    <com.reddit.material.custom.HTMLMarkupTextView
         android:id="@+id/subreddit_description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
