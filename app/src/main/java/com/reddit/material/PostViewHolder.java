@@ -6,8 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.Build;
-import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -27,7 +25,7 @@ import android.widget.Toast;
 
 import com.facebook.common.util.UriUtil;
 import com.facebook.drawee.view.SimpleDraweeView;
-import com.reddit.material.libraries.google.CustomTabActivityHelper;
+import com.reddit.material.custom.HTMLMarkupTextView;
 
 /**
  * Created by Rushil Perera on 10/28/2015.
@@ -112,10 +110,10 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
     }
 
     public void init(final Post post) {
-        init(post, false, false);
+        init(post, false, false, false);
     }
 
-    public void init(final Post post, boolean ellipsize, boolean hideReply) {
+    public void init(final Post post, boolean ellipsize, boolean hideReply, boolean clickable) {
         String imageURL;
         if (post.getPreviewImageURL() == null) {
             if (post.getURL() == null) {
@@ -123,24 +121,29 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
                 loading.setVisibility(View.GONE);
             } else {
                 setURL(imageURL = post.getURL());
-                if (post.isOver18()) {
-                    Uri nsfwPath = new Uri.Builder()
-                            .scheme(UriUtil.LOCAL_RESOURCE_SCHEME)
-                            .path(String.valueOf(R.drawable.nsfw_reddit_icon))
-                            .build();
-                    image.setImageURI(nsfwPath);
-                    loading.setVisibility(View.GONE);
-                    nsfwTag.setVisibility(View.VISIBLE);
-                } else {
-                    if (ConstantMap.getInstance().isImage(post.getURL())) {
-                        image.setVisibility(View.VISIBLE);
-                        loading.setVisibility(View.VISIBLE);
-                        ConnectionSingleton.getInstance().loadImage(imageURL, image, loading);
-                    } else {
-                        image.setVisibility(View.GONE);
+                if (ConstantMap.getInstance().isImage(imageURL)) {
+                    if (post.isOver18()) {
+                        Uri nsfwPath = new Uri.Builder()
+                                .scheme(UriUtil.LOCAL_RESOURCE_SCHEME)
+                                .path(String.valueOf(R.drawable.nsfw_reddit_icon))
+                                .build();
+                        image.setImageURI(nsfwPath);
                         loading.setVisibility(View.GONE);
+                        nsfwTag.setVisibility(View.VISIBLE);
+                    } else {
+                        if (ConstantMap.getInstance().isImage(post.getURL())) {
+                            image.setVisibility(View.VISIBLE);
+                            loading.setVisibility(View.VISIBLE);
+                            ConnectionSingleton.getInstance().loadImage(imageURL, image, loading);
+                        } else {
+                            image.setVisibility(View.GONE);
+                            loading.setVisibility(View.GONE);
+                        }
+                        nsfwTag.setVisibility(View.GONE);
                     }
-                    nsfwTag.setVisibility(View.GONE);
+                } else {
+                    image.setVisibility(View.GONE);
+                    loading.setVisibility(View.GONE);
                 }
             }
         } else {
@@ -179,6 +182,8 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
         gilded.setText(String.format("%d", post.getGilded()));
         flair.setText(post.getLinkFlairText());
 
+        selfText.setActivity(activity);
+        selfText.setParent(itemView);
         if (!post.getSelfTextHTML().equals("")) {
             if (ellipsize) {
                 selfText.setMaxLines(3);
@@ -245,42 +250,22 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
 
         reply.setVisibility(hideReply ? View.GONE : View.VISIBLE);
 
-        itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(activity, CommentActivity.class);
-                intent.putExtra("post", post);
-                activity.startActivity(intent);
-            }
-        });
+        if (clickable)
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(activity, CommentActivity.class);
+                    intent.putExtra("post", post);
+                    activity.startActivity(intent);
+                }
+            });
     }
 
     public void setURL(final String url) {
         image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ConstantMap.getInstance().isYoutube(url)) {
-                    Intent intent = new Intent(activity, YouTubeActivity.class);
-                    intent.putExtra("url", url);
-                    activity.startActivity(intent);
-                } else if (ConstantMap.getInstance().isGIF(url)) {
-                    Intent intent = new Intent(activity, VideoActivity.class);
-                    intent.putExtra("url", url);
-                    activity.startActivity(intent);
-                } else if (ConstantMap.getInstance().isImage(url)) {
-                    Intent intent = new Intent(activity, ImageActivity.class);
-                    intent.putExtra("url", url);
-                    activity.startActivity(intent);
-                } else {
-                    CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        builder.setToolbarColor(activity.getResources().getColor(R.color.colorPrimary, null));
-                    } else {
-                        builder.setToolbarColor(activity.getResources().getColor(R.color.colorPrimary));
-                    }
-                    builder.setShowTitle(true);
-                    CustomTabActivityHelper.openCustomTab(activity, builder.build(), Uri.parse(url), null);
-                }
+                Util.linkClicked(activity, url);
             }
         });
     }
