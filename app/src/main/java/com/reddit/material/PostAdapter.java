@@ -30,7 +30,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostViewHolder> {
     @Override
     public void onBindViewHolder(final PostViewHolder holder, int position) {
         final Post post = posts.get(position);
-        holder.init(post);
+        holder.init(post, true, true, true);
     }
 
     @Override
