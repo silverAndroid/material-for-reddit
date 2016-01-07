@@ -10,8 +10,9 @@ public class ConstantMap {
     private static final String IMGUR = "imgur";
     private static final String FLICKR = "flickr";
     private static final String GFYCAT = "gfycat";
-    private static final String YOUTUBE = "youtube";
-    private static final String YOUTUBE_SHORT = "youtu.be";
+    private static final String YOUTUBE_REGEX = ".*youtu\\.?be.*";
+    private static final String REDDIT_REGEX = ".*redd\\.?it.*";
+    private static final String IMGUR_GALLERY_REGEX = ".*imgur\\.com/((gallery)|a).*";
     private static final String BMP = ".bmp";
     private static final String PNG = ".png";
     private static final String JPEG = ".jpg";
@@ -39,17 +40,25 @@ public class ConstantMap {
         return instance;
     }
 
-    public boolean isImage(String string) {
-        return string.contains(PNG) || string.contains(JPEG) || string.contains(BMP) || string.contains(IMGUR) ||
-                string.contains(FLICKR);
+    public boolean isImage(String url) {
+        return url.contains(PNG) || url.contains(JPEG) || url.contains(BMP) || url.contains(IMGUR) || url.contains
+                (FLICKR);
     }
 
-    public boolean isGIF(String string) {
-        return string.contains(GFYCAT) || string.contains(GIF) || string.contains(GIFV);
+    public boolean isGIF(String url) {
+        return url.contains(GFYCAT) || url.contains(GIF) || url.contains(GIFV);
     }
 
-    public boolean isYoutube(String string) {
-        return string.contains(YOUTUBE) || string.contains(YOUTUBE_SHORT);
+    public boolean isYoutube(String url) {
+        return url.matches(YOUTUBE_REGEX);
+    }
+
+    public boolean isReddit(String url) {
+        return url.matches(REDDIT_REGEX);
+    }
+
+    public boolean isGallery(String url) {
+        return url.matches(IMGUR_GALLERY_REGEX);
     }
 
     public HashMap<String, String> getConstantMap() {
