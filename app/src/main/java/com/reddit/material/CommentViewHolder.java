@@ -19,6 +19,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.reddit.material.custom.HTMLMarkupTextView;
+
 import java.util.ArrayList;
 
 /**
@@ -115,6 +117,8 @@ public class CommentViewHolder extends RecyclerView.ViewHolder implements View.O
 
     public void init(final Comment comment) {
         username.setText(comment.getAuthor());
+        text.setActivity(activity);
+        text.setParent(itemView);
         text.setHTMLText(comment.getBodyHTML());
         numPoints.setText(String.format("%d pts", comment.getScore()));
         gilded.setVisibility(comment.getGilded() == 0 ? View.GONE : View.VISIBLE);
@@ -165,6 +169,7 @@ public class CommentViewHolder extends RecyclerView.ViewHolder implements View.O
                 numPoints.setTextColor(downvote.isSelected() ? Color.parseColor("#880E4F") : Color.BLACK);
             }
         });
+
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
