@@ -45,7 +45,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Fresco.initialize(context, config);
         ConnectionSingleton.createInstance(context);
         Authentication.newInstance(context);
-        ConnectionSingleton.getInstance().getSubreddits();
+        if (getIntent().getStringExtra("subreddit") == null) {
+            ConnectionSingleton.getInstance().getSubreddits();
+        } else {
+            ConnectionSingleton.getInstance().getSubreddits(false);
+            getSupportFragmentManager().beginTransaction().add(R.id.container, SubredditFragment.newInstance
+                    (getIntent().getStringExtra("subreddit"))).commit();
+        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
