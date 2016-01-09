@@ -38,7 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <EditText
+            <com.reddit.material.libraries.org.droidparts.widget.ClearableEditText
                 android:id="@+id/subreddit_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -59,7 +59,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <EditText
+            <com.reddit.material.libraries.org.droidparts.widget.ClearableEditText
                 android:id="@+id/author_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -80,8 +80,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <EditText
-                android:id="@+id/url_edit"
+            <com.reddit.material.libraries.org.droidparts.widget.ClearableEditText
+                android:id="@+id/text_url_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
@@ -101,7 +101,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <EditText
+            <com.reddit.material.libraries.org.droidparts.widget.ClearableEditText
                 android:id="@+id/site_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -122,7 +122,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <EditText
+            <com.reddit.material.libraries.org.droidparts.widget.ClearableEditText
                 android:id="@+id/self_text_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -143,7 +143,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <EditText
+            <com.reddit.material.libraries.org.droidparts.widget.ClearableEditText
                 android:id="@+id/flair_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
