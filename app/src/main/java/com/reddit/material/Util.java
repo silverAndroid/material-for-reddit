@@ -127,7 +127,7 @@ public class Util {
                 Log.i(TAG, "linkClicked: " + redditPath);
                 String[] redditPathArray = redditPath.split("/");
                 if (redditPathArray.length > 2) {
-                    String redditCategory = redditPath.split("/")[2];
+                    String redditCategory = redditPathArray[2];
                     if (redditCategory.equals("comments")) {
                         Intent intent = new Intent(activity, CommentActivity.class);
                         intent.putExtra("permalink", "/" + redditPath);
