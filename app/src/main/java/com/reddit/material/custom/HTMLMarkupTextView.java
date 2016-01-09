@@ -80,7 +80,7 @@ public class HTMLMarkupTextView extends TextView {
         if (html != null && !html.equalsIgnoreCase("null")) {
             html = html.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&apos;", "'").replace
                     ("&amp;", "&").replace("</del>", "</strike>").replace("<del>", "<strike>").replace("<!-- SC_OFF " +
-                    "-->", "").replace("<!-- SC_ON -->", "").trim();
+                    "-->", "").replace("<!-- SC_ON -->", "").replace("&nbsp;", "\n").trim();
             try {
                 SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
                 parser.parse(new InputSource(new StringReader(html)), handler);
