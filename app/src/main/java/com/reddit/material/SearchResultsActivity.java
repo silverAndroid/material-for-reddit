@@ -11,10 +11,11 @@ import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.reddit.material.libraries.org.droidparts.widget.ClearableEditText;
 
 public class SearchResultsActivity extends AppCompatActivity {
 
@@ -42,11 +43,11 @@ public class SearchResultsActivity extends AppCompatActivity {
         progressBar = (ProgressBar) findViewById(R.id.loading);
         hideProgressBar();
 
-        final EditText searchBox = (EditText) toolbar.findViewById(R.id.search_box);
+        final ClearableEditText searchBox = (ClearableEditText) toolbar.findViewById(R.id.search_box);
         searchBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (getSupportFragmentManager().findFragmentById(R.id.container) == null) {
+                if (fragment == null) {
                     getSupportFragmentManager().beginTransaction().add(R.id.container, (fragment = SearchFragment
                             .newInstance(query))).addToBackStack("filters").commit();
                 }
@@ -108,5 +109,6 @@ public class SearchResultsActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction().remove(fragment).commit();
         progressBar.setVisibility(View.VISIBLE);
         ConnectionSingleton.getInstance().search(query);
+        fragment = null;
     }
 }

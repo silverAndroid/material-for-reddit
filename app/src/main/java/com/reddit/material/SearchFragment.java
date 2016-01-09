@@ -59,7 +59,7 @@ public class SearchFragment extends Fragment {
         selfPost = (CheckBox) view.findViewById(R.id.self_post_checkbox);
         subreddit = (EditText) view.findViewById(R.id.subreddit_edit);
         author = (EditText) view.findViewById(R.id.author_edit);
-        url = (EditText) view.findViewById(R.id.url_edit);
+        url = (EditText) view.findViewById(R.id.text_url_edit);
         site = (EditText) view.findViewById(R.id.site_edit);
         selfText = (EditText) view.findViewById(R.id.self_text_edit);
         flair = (EditText) view.findViewById(R.id.flair_edit);
