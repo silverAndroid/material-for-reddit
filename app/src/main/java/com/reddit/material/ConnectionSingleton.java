@@ -3,6 +3,7 @@ package com.reddit.material;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.drawable.Animatable;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -85,13 +86,23 @@ public class ConnectionSingleton {
     }
 
     public void getSubredditData(String subreddit) {
+        getSubredditData(subreddit, "");
+    }
+
+    public void getSubredditData(String subreddit, String sort) {
+        getSubredditData(subreddit, sort, "");
+    }
+
+    public void getSubredditData(String subreddit, String sort, String time) {
+        String url = "https://www.reddit.com" + (subreddit.isEmpty() ? "" : "/r/" + subreddit) + (sort.isEmpty() ? ""
+                : "/" + sort) + "/.json" + (time.isEmpty() ? "" : "?t=" + time);
+        Log.d(TAG, "getSubredditData: " + url);
         final ArrayList<Post> posts = new ArrayList<>();
         AsyncHttpClient subredditClient = new AsyncHttpClient();
         final PersistentCookieStore cookieStore = new PersistentCookieStore(context);
         subredditClient.setCookieStore(cookieStore);
         subredditClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
-        subredditClient.get(context, subreddit.isEmpty() ? "https://www.reddit.com/.json" : "https://www.reddit" +
-                ".com/r/" + subreddit + "/.json", new JsonHttpResponseHandler() {
+        subredditClient.get(context, url, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 JSONArray postsJson;
@@ -227,7 +238,7 @@ public class ConnectionSingleton {
                 });
     }
 
-    public void loadImage(String url, final SimpleDraweeView imageView, final ProgressBar loading) {
+    public void loadImage(final String url, final SimpleDraweeView imageView, final ProgressBar loading) {
 
         ControllerListener<ImageInfo> listener = new BaseControllerListener<ImageInfo>() {
             @Override
@@ -237,6 +248,8 @@ public class ConnectionSingleton {
 
             @Override
             public void onFailure(String id, Throwable throwable) {
+                Log.e(TAG, "onFailure: " + url, throwable);
+                imageView.setVisibility(View.GONE);
                 loading.setVisibility(View.GONE);
             }
         };
@@ -515,6 +528,33 @@ public class ConnectionSingleton {
         });
     }
 
+    public void post(String title, String textURL, String subreddit, String kind) {
+        AsyncHttpClient postClient = generateHTTPClient(true);
+        HashMap<String, String> bodyParams = new HashMap<>();
+        bodyParams.put("api_type", "json");
+        bodyParams.put("kind", kind);
+        bodyParams.put("resubmit", "false");
+        bodyParams.put("sr", subreddit);
+        bodyParams.put(kind.equals("self") ? "text" : "url", textURL);
+        bodyParams.put("title", title);
+        bodyParams.put("extension", "json");
+        RequestParams params = new RequestParams(bodyParams);
+        postClient.post("https://oauth.reddit.com/api/submit.json", params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                try {
+                    String redditURL = response.getJSONObject("json").getJSONObject("data").getString("url");
+                    Intent intent = new Intent(context, CommentActivity.class);
+                    intent.putExtra("permalink", "/" + redditURL.replaceFirst("https?://(www\\.)?redd.?it(.com)?/",
+                            ""));
+                    context.startActivity(intent);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
     public void comment(final String text, final String id, final EditText editMessage) {
         AsyncHttpClient commentClient = new AsyncHttpClient();
         commentClient.addHeader("Authorization", "bearer " + Authentication.getInstance().getAccessToken());
@@ -637,6 +677,24 @@ public class ConnectionSingleton {
             SearchResultsActivity.getAdapter().addItems(results);
             SearchResultsActivity.hideProgressBar();
         }
+    }
+
+    public void vote(String id, int dir) {
+        Log.d("id", id);
+        String accessToken = Authentication.getInstance().getAccessToken();
+        Ion.with(context).load("POST", "https://oauth.reddit.com/api/vote.json")
+                .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
+                .addHeader("Authorization", "bearer " + accessToken)
+                .setBodyParameter("dir", String.valueOf(dir))
+                .setBodyParameter("id", id)
+                .asJsonObject().withResponse()
+                .setCallback(new FutureCallback<Response<JsonObject>>() {
+                    @Override
+                    public void onCompleted(Exception e, Response<JsonObject> result) {
+                        Log.d("result", result.getResult().toString());
+                    }
+                });
+        Log.d("id", String.valueOf(dir));
     }
 
     public void login(final Context context) {
@@ -788,24 +846,6 @@ public class ConnectionSingleton {
         });
     }
 
-    public void vote(String id, int dir) {
-        Log.d("id", id);
-        String accessToken = Authentication.getInstance().getAccessToken();
-        Ion.with(context).load("POST", "https://oauth.reddit.com/api/vote.json")
-                .setHeader("User-Agent", ConstantMap.getInstance().getConstant("user_agent"))
-                .addHeader("Authorization", "bearer " + accessToken)
-                .setBodyParameter("dir", String.valueOf(dir))
-                .setBodyParameter("id", id)
-                .asJsonObject().withResponse()
-                .setCallback(new FutureCallback<Response<JsonObject>>() {
-                    @Override
-                    public void onCompleted(Exception e, Response<JsonObject> result) {
-                        Log.d("result", result.getResult().toString());
-                    }
-                });
-        Log.d("id", String.valueOf(dir));
-    }
-
     private boolean checkUsername(String username) {
         int length = username.length();
         return length >= 3 && length <= 20;
@@ -814,6 +854,14 @@ public class ConnectionSingleton {
     private boolean checkPassword(String password) {
         int length = password.length();
         return length >= 5;
+    }
+
+    private AsyncHttpClient generateHTTPClient(boolean authorizationRequired) {
+        AsyncHttpClient httpClient = new AsyncHttpClient();
+        if (authorizationRequired)
+            httpClient.addHeader("Authorization", "bearer " + Authentication.getInstance().getAccessToken());
+        httpClient.setUserAgent(ConstantMap.getInstance().getUserAgent());
+        return httpClient;
     }
 
     private LinkedHashMap<String, List<String>> splitQuery(java.net.URL url) throws UnsupportedEncodingException {
