@@ -1,7 +1,7 @@
 package com.reddit.material;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -21,18 +21,18 @@ public class SubmitImageImgurUpload extends AsyncTask<InputStream, Void, String>
     private static final String TAG = "SubmitImageImgurUpload";
     private final String title;
     private final String subreddit;
-    private final Context context;
+    private final Activity activity;
     private ProgressDialog dialog;
 
-    public SubmitImageImgurUpload(String title, String subreddit, Context context) {
+    public SubmitImageImgurUpload(String title, String subreddit, Activity activity) {
         this.title = title;
         this.subreddit = subreddit;
-        this.context = context;
+        this.activity = activity;
     }
 
     @Override
     protected void onPreExecute() {
-        dialog = new ProgressDialog(context, R.style.DialogTheme);
+        dialog = new ProgressDialog(activity, R.style.DialogTheme);
         dialog.setMessage("Uploading image to Imgur...");
         dialog.show();
     }
@@ -47,7 +47,7 @@ public class SubmitImageImgurUpload extends AsyncTask<InputStream, Void, String>
     protected void onPostExecute(String response) {
         dialog.dismiss();
         if (response != null) {
-            ConnectionSingleton.getInstance().post(title, response, subreddit, "link");
+            ConnectionSingleton.getInstance().post(activity, title, response, subreddit, "link");
         }
     }
 
@@ -59,7 +59,8 @@ public class SubmitImageImgurUpload extends AsyncTask<InputStream, Void, String>
             conn = (HttpURLConnection) new java.net.URL("https://api.imgur.com/3/image.json").openConnection();
             conn.setDoOutput(true);
 
-            conn.setRequestProperty("Authorization", "Client-ID fb3d1f968693183");
+            conn.setRequestProperty("Authorization", "Client-ID " + APIKey.getInstance().getAPIKey(APIKey
+                    .IMGUR_CLIENT_ID_KEY));
 
             OutputStream out = conn.getOutputStream();
             copy(inputStream, out);
