@@ -326,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             String errorForm;
                             if (!(errorForm = validForm(title, image)).equals("")) {
                                 if (inputStream != null)
-                                    new ImgurUpload(title, subreddit, getBaseContext()).execute(inputStream);
+                                    new SubmitImageImgurUpload(title, subreddit, getBaseContext()).execute(inputStream);
                                 else {
                                     String errorMessage = "Cannot be empty!";
                                     switch (errorForm.toLowerCase()) {
