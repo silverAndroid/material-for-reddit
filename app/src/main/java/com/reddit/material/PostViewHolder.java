@@ -12,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.webkit.URLUtil;
@@ -32,6 +33,7 @@ import com.reddit.material.custom.HTMLMarkupTextView;
  */
 public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+    private static final String TAG = "PostViewHolder";
     final TextView title;
     final TextView lineOneInfo;
     final TextView source;
@@ -116,58 +118,31 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
     public void init(final Post post, boolean ellipsize, boolean hideReply, boolean clickable) {
         String imageURL;
         if (post.getPreviewImageURL() == null) {
-            if (post.getURL() == null) {
-                image.setVisibility(View.GONE);
-                loading.setVisibility(View.GONE);
-            } else {
-                setURL(imageURL = post.getURL());
-                if (ConstantMap.getInstance().isImage(imageURL)) {
-                    if (post.isOver18()) {
-                        Uri nsfwPath = new Uri.Builder()
-                                .scheme(UriUtil.LOCAL_RESOURCE_SCHEME)
-                                .path(String.valueOf(R.drawable.nsfw_reddit_icon))
-                                .build();
-                        image.setImageURI(nsfwPath);
-                        loading.setVisibility(View.GONE);
-                        nsfwTag.setVisibility(View.VISIBLE);
-                    } else {
-                        if (ConstantMap.getInstance().isImage(post.getURL())) {
-                            image.setVisibility(View.VISIBLE);
-                            loading.setVisibility(View.VISIBLE);
-                            ConnectionSingleton.getInstance().loadImage(imageURL, image, loading);
-                        } else {
-                            image.setVisibility(View.GONE);
-                            loading.setVisibility(View.GONE);
-                        }
-                        nsfwTag.setVisibility(View.GONE);
-                    }
+            String url = imageURL = post.getURL();
+            if (url == null) {
+                hideImage();
+            } else if (ConstantMap.getInstance().isImage(url)) {
+                if (post.isOver18()) {
+                    markPostNSFW();
                 } else {
-                    image.setVisibility(View.GONE);
-                    loading.setVisibility(View.GONE);
+                    loadImage(url);
                 }
+            } else {
+                hideImage();
             }
         } else {
-            setURL(post.getURL());
+            imageURL = post.getPreviewImageURL();
             if (post.isOver18()) {
-                Uri nsfwPath = new Uri.Builder()
-                        .scheme(UriUtil.LOCAL_RESOURCE_SCHEME)
-                        .path(String.valueOf(R.drawable.nsfw_reddit_icon))
-                        .build();
-                image.setImageURI(nsfwPath);
-                loading.setVisibility(View.GONE);
-                nsfwTag.setVisibility(View.VISIBLE);
+                markPostNSFW();
             } else {
-                if (ConstantMap.getInstance().isImage(post.getPreviewImageURL())) {
-                    image.setVisibility(View.VISIBLE);
-                    loading.setVisibility(View.VISIBLE);
-                } else {
-                    image.setVisibility(View.GONE);
-                    loading.setVisibility(View.GONE);
-                }
-                nsfwTag.setVisibility(View.GONE);
-                ConnectionSingleton.getInstance().loadImage(post.getPreviewImageURL(), image, loading);
+                loadImage(imageURL);
             }
         }
+
+        if (post.getURL() != null)
+            setURL(post.getURL());
+
+        Log.d(TAG, "init: " + imageURL);
 
         title.setText(post.getTitle());
         flair.setVisibility(post.getLinkFlairText() == null ? View.GONE : post.getLinkFlairText().equals
@@ -444,5 +419,28 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
             default:
                 break;
         }
+    }
+
+    private void loadImage(String imageURL) {
+        image.setVisibility(View.VISIBLE);
+        loading.setVisibility(View.VISIBLE);
+        ConnectionSingleton.getInstance().loadImage(imageURL, image, loading);
+        nsfwTag.setVisibility(View.GONE);
+    }
+
+    private void markPostNSFW() {
+        Uri nsfwPath = new Uri.Builder()
+                .scheme(UriUtil.LOCAL_RESOURCE_SCHEME)
+                .path(String.valueOf(R.drawable.nsfw_reddit_icon))
+                .build();
+        image.setVisibility(View.VISIBLE);
+        image.setImageURI(nsfwPath);
+        loading.setVisibility(View.GONE);
+        nsfwTag.setVisibility(View.VISIBLE);
+    }
+
+    private void hideImage() {
+        image.setVisibility(View.GONE);
+        loading.setVisibility(View.GONE);
     }
 }
