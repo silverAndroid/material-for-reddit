@@ -51,8 +51,7 @@
         <activity
             android:name=".ImageGalleryActivity"
             android:label="@string/title_activity_image_gallery"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 
 </manifest>
