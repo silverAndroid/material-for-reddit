@@ -41,24 +41,28 @@ public class ConstantMap {
     }
 
     public boolean isImage(String url) {
-        return url.contains(PNG) || url.contains(JPEG) || url.contains(BMP) || url.contains(IMGUR) || url.contains
-                (FLICKR);
+        return url != null && (url.contains(PNG) || url.contains(JPEG) || url.contains(BMP) || url.contains(IMGUR) ||
+                url.contains(FLICKR));
     }
 
     public boolean isGIF(String url) {
-        return url.contains(GFYCAT) || url.contains(GIF) || url.contains(GIFV);
+        return url != null && (url.contains(GFYCAT) || url.contains(GIF) || url.contains(GIFV));
     }
 
     public boolean isYoutube(String url) {
-        return url.matches(YOUTUBE_REGEX);
+        return url != null && (url.matches(YOUTUBE_REGEX));
     }
 
     public boolean isReddit(String url) {
-        return url.matches(REDDIT_REGEX);
+        return url != null && (url.matches(REDDIT_REGEX));
     }
 
     public boolean isGallery(String url) {
-        return url.matches(IMGUR_GALLERY_REGEX);
+        return url != null && (url.matches(IMGUR_GALLERY_REGEX));
+    }
+
+    public String getUserAgent() {
+        return USER_AGENT;
     }
 
     public HashMap<String, String> getConstantMap() {
