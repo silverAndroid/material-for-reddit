@@ -28,7 +28,9 @@ import java.util.ArrayList;
  */
 public class CommentViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-    private final static ArrayList<Integer> sideColors;
+    private static final ArrayList<Integer> sideColors;
+    private static final String UPVOTE_HEX = "#FF4081";
+    private static final String DOWNVOTE_HEX = "#4D42FC";
 
     static {
         sideColors = new ArrayList<>();
@@ -145,16 +147,20 @@ public class CommentViewHolder extends RecyclerView.ViewHolder implements View.O
                     return;
                 }
 
+                int oldScore = comment.getScore();
+                int newScore = upvote.isSelected() ? oldScore - 1 : downvote.isSelected() ? oldScore + 2 : oldScore + 1;
+                comment.setScore(newScore);
                 upvote.setSelected(!upvote.isSelected());
                 downvote.setSelected(false);
                 comment.vote(upvote.isSelected() ? 1 : 0);
-                numPoints.setTextColor(upvote.isSelected() ? Color.parseColor("#FF4081") : Color.BLACK);
+                numPoints.setTextColor(upvote.isSelected() ? Color.parseColor(UPVOTE_HEX) : Color.BLACK);
+                numPoints.setText(String.format("%d pts", comment.getScore()));
             }
         });
 
         downvote.setSelected(comment.getVote() == -1);
-        numPoints.setTextColor(upvote.isSelected() ? Color.parseColor("#FF4081") : downvote.isSelected() ? Color
-                .parseColor("#880E4F") : Color.BLACK);
+        numPoints.setTextColor(upvote.isSelected() ? Color.parseColor(UPVOTE_HEX) : downvote.isSelected() ? Color
+                .parseColor(DOWNVOTE_HEX) : Color.BLACK);
         downvote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -163,10 +169,14 @@ public class CommentViewHolder extends RecyclerView.ViewHolder implements View.O
                     return;
                 }
 
+                int oldScore = comment.getScore();
+                int newScore = downvote.isSelected() ? oldScore + 1 : upvote.isSelected() ? oldScore - 2 : oldScore - 1;
+                comment.setScore(newScore);
                 downvote.setSelected(!downvote.isSelected());
                 upvote.setSelected(false);
                 comment.vote(downvote.isSelected() ? -1 : 0);
-                numPoints.setTextColor(downvote.isSelected() ? Color.parseColor("#880E4F") : Color.BLACK);
+                numPoints.setTextColor(downvote.isSelected() ? Color.parseColor(DOWNVOTE_HEX) : Color.BLACK);
+                numPoints.setText(String.format("%d pts", comment.getScore()));
             }
         });
 
@@ -252,14 +262,13 @@ public class CommentViewHolder extends RecyclerView.ViewHolder implements View.O
             case R.id.btn_link:
                 final int selectionStartURL = editMessage.getSelectionStart();
                 final int selectionEndURL = editMessage.getSelectionEnd();
-                final AlertDialog alertDialog = new AlertDialog.Builder(activity)
+                final AlertDialog alertDialog = new AlertDialog.Builder(activity, R.style.DialogTheme)
                         .setView(R.layout.layout_url_dialog)
                         .setTitle("Enter URL")
                         .setPositiveButton("OK", null)
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
                             }
                         })
                         .create();

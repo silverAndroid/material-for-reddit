@@ -34,6 +34,8 @@ import com.reddit.material.custom.HTMLMarkupTextView;
 public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
     private static final String TAG = "PostViewHolder";
+    private static final String UPVOTE_HEX = "#FF4081";
+    private static final String DOWNVOTE_HEX = "#4D42FC";
     final TextView title;
     final TextView lineOneInfo;
     final TextView source;
@@ -147,8 +149,6 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
         title.setText(post.getTitle());
         flair.setVisibility(post.getLinkFlairText() == null ? View.GONE : post.getLinkFlairText().equals
                 ("") ? View.GONE : View.VISIBLE);
-        lineOneInfo.setText(Html.fromHtml("<b><font size=\"20\">" + post.getScore() + "</font></b> pts " +
-                "<b>" + post.getNumComments() + "</b> comments by <b>" + post.getAuthor() + "</b>"));
         source.setText(post.getDomain());
         timeSubredditInfo.setText(Html.fromHtml("<b>" + DateUtils.getRelativeTimeSpanString(post
                 .getCreatedUTC() * 1000, System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS) + "</b> to " +
@@ -178,9 +178,17 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
                     return;
                 }
 
+                int oldScore = post.getScore();
+                int newScore = upvote.isSelected() ? oldScore - 1 : downvote.isSelected() ? oldScore + 2 : oldScore + 1;
+                post.setScore(newScore);
                 upvote.setSelected(!upvote.isSelected());
                 downvote.setSelected(false);
                 post.vote(upvote.isSelected() ? 1 : 0);
+                int labelColor = upvote.isSelected() ? Color.parseColor(UPVOTE_HEX) : Color.BLACK;
+                String colorString = String.format("%X", labelColor).substring(2);
+                lineOneInfo.setText(Html.fromHtml("<font size=\"20\" color=\"#" + colorString + "\"><b>" + post
+                        .getScore() + "</b> pts</font> <b>" + post.getNumComments() + "</b> comments by <b>" + post
+                        .getAuthor() + "</b>"));
             }
         });
 
@@ -192,12 +200,26 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
                     Toast.makeText(activity, "You must be logged in to vote!", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
+                int oldScore = post.getScore();
+                int newScore = downvote.isSelected() ? oldScore + 1 : upvote.isSelected() ? oldScore - 2 : oldScore - 1;
+                post.setScore(newScore);
                 downvote.setSelected(!downvote.isSelected());
                 upvote.setSelected(false);
                 post.vote(downvote.isSelected() ? -1 : 0);
+                int labelColor = downvote.isSelected() ? Color.parseColor(DOWNVOTE_HEX) : Color.BLACK;
+                String colorString = String.format("%X", labelColor).substring(2);
+                lineOneInfo.setText(Html.fromHtml("<font size=\"20\" color=\"#" + colorString + "\"><b>" + post
+                        .getScore() + "</b> pts</font> <b>" + post.getNumComments() + "</b> comments by <b>" + post
+                        .getAuthor() + "</b>"));
             }
         });
+
+        int labelColor = upvote.isSelected() ? Color.parseColor(UPVOTE_HEX) : downvote.isSelected() ? Color.parseColor
+                (DOWNVOTE_HEX) : Color.BLACK;
+        String colorString = String.format("%X", labelColor).substring(2);
+        lineOneInfo.setText(Html.fromHtml("<font size=\"20\" color=\"#" + colorString + "\"><b>" + post.getScore() +
+                "</b> pts</font> <b>" + post.getNumComments() + "</b> comments by <b>" + post.getAuthor() +
+                "</b>"));
 
         if (gilded.getVisibility() == View.VISIBLE) {
             card.setCardBackgroundColor(Color.rgb(253, 221, 98));
@@ -309,7 +331,7 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
             case R.id.btn_link:
                 final int selectionStartURL = editMessage.getSelectionStart();
                 final int selectionEndURL = editMessage.getSelectionEnd();
-                final AlertDialog alertDialog = new AlertDialog.Builder(activity)
+                final AlertDialog alertDialog = new AlertDialog.Builder(activity, R.style.DialogTheme)
                         .setView(R.layout.layout_url_dialog)
                         .setTitle("Enter URL")
                         .setPositiveButton("OK", null)
