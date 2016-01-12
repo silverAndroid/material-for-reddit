@@ -52,6 +52,9 @@
             android:name=".ImageGalleryActivity"
             android:label="@string/title_activity_image_gallery"
             android:theme="@style/AppTheme.NoActionBar"/>
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="645caf81cfeaa941df26f2ee3a0def5b2f334736" />
     </application>
 
 </manifest>
