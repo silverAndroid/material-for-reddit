@@ -1,5 +1,6 @@
 package com.reddit.material;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -204,15 +205,7 @@ public class ConnectionSingleton {
                             CommentActivity.getAdapter().setPost(post[0]);
                             JSONArray commentsJSON = response.getJSONObject(1).getJSONObject("data").getJSONArray
                                     ("children");
-                            for (int i = 0; i < commentsJSON.length(); i++) {
-                                JSONObject commentJSON = commentsJSON.getJSONObject(i).getJSONObject("data");
-                                Comment comment = Util.generateComment(commentJSON);
-                                if (comment != null)
-                                    comments.add(comment);
-                                else
-                                    Log.d(TAG, "onSuccess: " + commentJSON);
-                            }
-                            CommentActivity.getAdapter().addComments(comments);
+                            CommentActivity.getAdapter().addComments(commentsJSON);
 
                             if (CommentActivity.getProgressBar().getVisibility() == View.GONE)
                                 CommentActivity.getSwipeRefreshLayout().setRefreshing(false);
@@ -504,15 +497,18 @@ public class ConnectionSingleton {
                 setCallback(new FutureCallback<JsonObject>() {
                     @Override
                     public void onCompleted(Exception e, JsonObject result) {
-                        videoView.setVideoURI(Uri.parse(result.getAsJsonPrimitive("mp4Url").getAsString()));
-                        videoView.start();
-                        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                            @Override
-                            public void onPrepared(MediaPlayer mp) {
-                                loading.setVisibility(View.GONE);
-                                mp.setLooping(true);
-                            }
-                        });
+                        if (videoView != null) {
+                            videoView.setVideoURI(Uri.parse(result.getAsJsonPrimitive("mp4Url").getAsString()));
+                            videoView.start();
+                            videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                                @Override
+                                public void onPrepared(MediaPlayer mp) {
+                                    loading.setVisibility(View.GONE);
+                                    mp.setLooping(true);
+
+                                }
+                            });
+                        }
                     }
                 });
     }
@@ -528,7 +524,7 @@ public class ConnectionSingleton {
         });
     }
 
-    public void post(String title, String textURL, String subreddit, String kind) {
+    public void post(final Activity activity, String title, String textURL, String subreddit, String kind) {
         AsyncHttpClient postClient = generateHTTPClient(true);
         HashMap<String, String> bodyParams = new HashMap<>();
         bodyParams.put("api_type", "json");
@@ -547,8 +543,9 @@ public class ConnectionSingleton {
                     Intent intent = new Intent(context, CommentActivity.class);
                     intent.putExtra("permalink", "/" + redditURL.replaceFirst("https?://(www\\.)?redd.?it(.com)?/",
                             ""));
-                    context.startActivity(intent);
+                    activity.startActivity(intent);
                 } catch (JSONException e) {
+                    Log.d(TAG, "JSONException: " + response.toString());
                     e.printStackTrace();
                 }
             }
@@ -585,7 +582,7 @@ public class ConnectionSingleton {
         });
     }
 
-    public void search(String query) {
+    public void search(final String query) {
         final ArrayList<Thing> results = new ArrayList<>();
         final boolean[] subredditsComplete = {false};
         final boolean[] postsComplete = {false};
@@ -600,7 +597,6 @@ public class ConnectionSingleton {
         RequestParams parameters = new RequestParams(bParams);
         subredditsClient.get(context, "https://www.reddit.com/subreddits/search.json", parameters, new
                 JsonHttpResponseHandler() {
-
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                         try {
@@ -629,6 +625,11 @@ public class ConnectionSingleton {
                         subredditsComplete[0] = true;
                         completeSearch(postsComplete[0], subredditsComplete[0], results);
                     }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                        Log.e(TAG, "onFailure: " + query, throwable);
+                    }
                 });
 
         AsyncHttpClient linksClient = new AsyncHttpClient();
@@ -642,6 +643,7 @@ public class ConnectionSingleton {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                Log.i(TAG, "onSuccess: " + this.getRequestURI());
                 Log.d(TAG, "onSuccess: " + response.toString());
                 try {
                     JSONArray linksArray = response.getJSONObject("data").getJSONArray("children");
@@ -668,6 +670,11 @@ public class ConnectionSingleton {
                 Log.e(TAG, "onFailure: " + errorResponse.toString(), throwable);
                 postsComplete[0] = true;
                 completeSearch(postsComplete[0], subredditsComplete[0], results);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.e(TAG, "onFailure: " + query, throwable);
             }
         });
     }
