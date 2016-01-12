@@ -65,6 +65,19 @@ public class Util {
         return null;
     }
 
+    public static UnloadedComments generateUnloadedComments(JSONObject object) {
+        try {
+            UnloadedComments comments;
+            comments = new UnloadedComments(object.getString("name"), object.getInt("count"), object.getString
+                    ("parent_id"), object.getJSONArray("children"));
+            Log.i(TAG, "generateUnloadedComments: " + object.toString());
+            return comments;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static Subreddit generateSubreddit(JSONObject object) {
         try {
             Subreddit subreddit;
