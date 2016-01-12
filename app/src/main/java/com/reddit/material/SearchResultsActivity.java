@@ -23,6 +23,7 @@ public class SearchResultsActivity extends AppCompatActivity {
     private static ProgressBar progressBar;
     private SearchFragment fragment;
     private String query;
+    private String filters;
 
     public static ThingAdapter getAdapter() {
         return adapter;
@@ -101,12 +102,15 @@ public class SearchResultsActivity extends AppCompatActivity {
     }
 
     private void search(String query) {
-        String filters = fragment.getFilters();
+        if (fragment != null) {
+            filters = fragment.getFilters();
+        }
         if (!filters.isEmpty())
-            query += " " + filters;
+            query += query.isEmpty() ? filters : (" " + filters);
         this.query = query;
         adapter.clear();
-        getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+        if (fragment != null)
+            getSupportFragmentManager().beginTransaction().remove(fragment).commit();
         progressBar.setVisibility(View.VISIBLE);
         ConnectionSingleton.getInstance().search(query);
         fragment = null;
