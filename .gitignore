@@ -16,3 +16,4 @@
 *.iml
 *.zip
 /app/src/main/java/com/reddit/material/APIKey.java
+/app/fabric.properties
