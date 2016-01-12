@@ -94,4 +94,5 @@
     <string name="image">Image</string>
     <string name="no_image_select">No image selected…</string>
     <string name="load_image_error">Error loading image…</string>
+    <string name="continue_thread">Continue comment thread…</string>
 </resources>
