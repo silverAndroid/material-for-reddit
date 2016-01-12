@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 
 public class SearchFragment extends Fragment {
@@ -19,6 +20,7 @@ public class SearchFragment extends Fragment {
     private EditText site;
     private EditText selfText;
     private EditText flair;
+    private String extraSearchTerms;
 
     public SearchFragment() {
         // Required empty public constructor
@@ -63,6 +65,31 @@ public class SearchFragment extends Fragment {
         site = (EditText) view.findViewById(R.id.site_edit);
         selfText = (EditText) view.findViewById(R.id.self_text_edit);
         flair = (EditText) view.findViewById(R.id.flair_edit);
+        extraSearchTerms = "";
+
+        nsfw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                String string = String.format("nsfw:%s ", isChecked ? "yes" : "no");
+                if (extraSearchTerms.contains("nsfw:")) {
+                    extraSearchTerms = extraSearchTerms.replaceFirst("(nsfw:)(yes|no)", string);
+                } else {
+                    extraSearchTerms += string;
+                }
+            }
+        });
+
+        selfPost.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                String string = String.format("self:%s ", isChecked ? "yes" : "no");
+                if (extraSearchTerms.contains("self:")) {
+                    extraSearchTerms = extraSearchTerms.replaceFirst("(self:)(yes|no)", string);
+                } else {
+                    extraSearchTerms += string;
+                }
+            }
+        });
 
         if (getArguments() != null) {
             String query = getArguments().getString("query");
@@ -102,16 +129,7 @@ public class SearchFragment extends Fragment {
     }
 
     public String getFilters() {
-        String extraSearchTerms = "";
         String string;
-        if (nsfw.isChecked())
-            extraSearchTerms += "nsfw:yes ";
-        else
-            extraSearchTerms += "nsfw:no ";
-        if (selfPost.isChecked())
-            extraSearchTerms += "self:yes ";
-        else
-            extraSearchTerms += "self:no ";
         if (!(string = subreddit.getText().toString()).isEmpty())
             extraSearchTerms += "subreddit:" + string + " ";
         if (!(string = author.getText().toString()).isEmpty())
