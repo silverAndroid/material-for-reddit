@@ -29,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -86,7 +88,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                loadSubmitDialog();
+                if (Authentication.getInstance().isLoggedIn())
+                    loadSubmitDialog();
+                else
+                    Toast.makeText(getBaseContext(), "You must be logged in to make a post!", Toast.LENGTH_SHORT)
+                            .show();
             }
         });
 
@@ -225,12 +231,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.subreddit = subreddit;
         getSupportActionBar().setTitle(subreddit);
         getSupportActionBar().setSubtitle(sort);
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, SubredditFragment
-                .newInstance(subreddit, sort.toLowerCase(), time)).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, SubredditFragment.newInstance
+                (subreddit, sort.toLowerCase(), time)).commit();
     }
 
     private void loadSortDialog() {
-        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this, R.style.DialogTheme)
                 .setView(R.layout.dialog_sort)
                 .setTitle("Sort By")
                 .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
@@ -287,77 +293,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         alertDialog = new AlertDialog.Builder(MainActivity.this, R.style.DialogTheme)
                 .setTitle("Submit to Reddit")
                 .setView(R.layout.dialog_submit)
-                .setPositiveButton("Submit", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Dialog view = (Dialog) dialog;
-                        EditText titleEditText = (EditText) view.findViewById(R.id.title_edit);
-                        EditText subredditText = (EditText) view.findViewById(R.id.subreddit_edit);
-                        String title = titleEditText.getText().toString();
-                        String subreddit = subredditText.getText().toString();
-                        if (selected[0] == 0 || selected[0] == 1) {
-                            EditText textURLEdit = (EditText) view.findViewById(R.id.text_url_edit);
-                            String textURL = textURLEdit.getText().toString();
-                            String errorForm;
-                            if (!(errorForm = validForm(title, subreddit, textURL)).equals("")) {
-                                ConnectionSingleton.getInstance().post(title, textURL, subreddit, selected[0] == 0 ?
-                                        "self" : "link");
-                            } else {
-                                String[] errors = errorForm.split(", ");
-                                for (String error : errors) {
-                                    String errorMessage = "Cannot be empty!";
-                                    switch (error.toLowerCase()) {
-                                        case "title":
-                                            titleEditText.setError(errorMessage);
-                                            break;
-                                        case "subreddit":
-                                            subredditText.setError(errorMessage);
-                                            break;
-                                        case "texturl":
-                                            textURLEdit.setError(errorMessage);
-                                            break;
-                                    }
-                                }
-                            }
-                        } else {
-                            ImageView selectedImage = (ImageView) view.findViewById(R.id.selected_image);
-                            TextView errorText = (TextView) view.findViewById(R.id.image_text);
-                            Drawable image = selectedImage.getDrawable();
-                            String errorForm;
-                            if (!(errorForm = validForm(title, image)).equals("")) {
-                                if (inputStream != null)
-                                    new SubmitImageImgurUpload(title, subreddit, getBaseContext()).execute(inputStream);
-                                else {
-                                    String errorMessage = "Cannot be empty!";
-                                    switch (errorForm.toLowerCase()) {
-                                        case "title":
-                                            titleEditText.setError(errorMessage);
-                                            break;
-                                        case "image":
-                                            errorText.setText(R.string.select_image);
-                                            errorText.setTextColor(Color.RED);
-                                            break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    private String validForm(String title, Drawable image) {
-                        String error = "";
-                        error += title.equals("") ? "Title, " : "";
-                        error += image == null ? "Image" : "";
-                        return error;
-                    }
-
-                    private String validForm(String title, String subreddit, String textURL) {
-                        String error = "";
-                        error += title.equals("") ? "Title, " : "";
-                        error += subreddit.equals("") ? "Subreddit, " : "";
-                        error += textURL.equals("") ? "TextURL" : "";
-                        return error;
-                    }
-                })
+                .setPositiveButton("Submit", null)
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -366,47 +302,58 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .setNeutralButton("Select Image...", null)
                 .create();
 
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-            @Override
-            public void onShow(DialogInterface dialog) {
-                final Dialog view = (Dialog) dialog;
-                Button neutralButton = alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL);
-                neutralButton.setOnClickListener(new View.OnClickListener() {
+        alertDialog.setOnShowListener(
+                new DialogInterface.OnShowListener() {
                     @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("image/*");
-                        startActivityForResult(intent, PICK_IMAGE);
-                    }
-                });
-                neutralButton.setVisibility(View.INVISIBLE);
-                RadioGroup options = (RadioGroup) view.findViewById(R.id.radio_group_options);
-                options.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(RadioGroup group, int checkedId) {
-                        switch (checkedId) {
-                            case R.id.radio_text:
-                                selected[0] = 0;
-                                break;
-                            case R.id.radio_url:
-                                selected[0] = 1;
-                                break;
-                            case R.id.radio_image:
-                                selected[0] = 2;
-                                break;
-                        }
+                    public void onShow(final DialogInterface dialog) {
+                        final Dialog view = (Dialog) dialog;
+                        Button neutralButton = alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+                        neutralButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                                intent.setType("image/*");
+                                startActivityForResult(intent, PICK_IMAGE);
+                            }
+                        });
+                        Button positiveButton = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                        positiveButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                initSubmitConfirmButton(view, selected[0]);
+                            }
+                        });
+                        neutralButton.setVisibility(View.INVISIBLE);
+                        RadioGroup options = (RadioGroup) view.findViewById(R.id.radio_group_options);
+                        options.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                            @Override
+                            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                                switch (checkedId) {
+                                    case R.id.radio_text:
+                                        selected[0] = 0;
+                                        break;
+                                    case R.id.radio_url:
+                                        selected[0] = 1;
+                                        break;
+                                    case R.id.radio_image:
+                                        selected[0] = 2;
+                                        break;
+                                }
+                                loadSubmitView(view, selected[0]);
+                            }
+                        });
                         loadSubmitView(view, selected[0]);
                     }
-                });
-                loadSubmitView(view, selected[0]);
-            }
-        });
+                }
+
+        );
         alertDialog.show();
     }
 
     private void loadSubmitView(Dialog parent, int checkedID) {
         TextInputLayout textInputLayout = (TextInputLayout) parent.findViewById(R.id.text_url_input_layout);
         EditText textURLEditText = (EditText) parent.findViewById(R.id.text_url_edit);
+        EditText subredditText = (EditText) parent.findViewById(R.id.subreddit_edit);
         ImageView selectedImage = (ImageView) parent.findViewById(R.id.selected_image);
         TextView emptyImageText = (TextView) parent.findViewById(R.id.image_text);
         Button selectImageButton = null;
@@ -424,13 +371,89 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             textURLEditText.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
             if (selectImageButton != null)
                 selectImageButton.setVisibility(View.INVISIBLE);
+            if (!subreddit.equalsIgnoreCase("frontpage") && !subreddit.equalsIgnoreCase("all")) {
+                subredditText.setText(subreddit);
+            }
         } else if (checkedID == 1) {
             textInputLayout.setHint("URL");
             textURLEditText.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
             if (selectImageButton != null)
                 selectImageButton.setVisibility(View.INVISIBLE);
+            if (!subreddit.equalsIgnoreCase("frontpage") && !subreddit.equalsIgnoreCase("all")) {
+                subredditText.setText(subreddit);
+            }
         } else if (checkedID == 2 && selectImageButton != null) {
             selectImageButton.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void initSubmitConfirmButton(Dialog parent, int selected) {
+        EditText titleEditText = (EditText) parent.findViewById(R.id.title_edit);
+        EditText subredditText = (EditText) parent.findViewById(R.id.subreddit_edit);
+        String title = titleEditText.getText().toString();
+        String subreddit = subredditText.getText().toString();
+        if (selected == 0 || selected == 1) {
+            EditText textURLEdit = (EditText) parent.findViewById(R.id.text_url_edit);
+            String textURL = textURLEdit.getText().toString();
+            String errorForm;
+            if ((errorForm = validForm(title, subreddit, textURL)).equals("")) {
+                ConnectionSingleton.getInstance().post(MainActivity.this, title, textURL, subreddit, selected == 0 ?
+                        "self" : "link");
+                parent.dismiss();
+            } else {
+                String[] errors = errorForm.split(", ");
+                for (String error : errors) {
+                    String errorMessage = "Cannot be empty!";
+                    switch (error.toLowerCase()) {
+                        case "title":
+                            titleEditText.setError(errorMessage);
+                            break;
+                        case "subreddit":
+                            subredditText.setError(errorMessage);
+                            break;
+                        case "texturl":
+                            textURLEdit.setError(errorMessage);
+                            break;
+                    }
+                }
+            }
+        } else {
+            ImageView selectedImage = (ImageView) parent.findViewById(R.id.selected_image);
+            TextView errorText = (TextView) parent.findViewById(R.id.image_text);
+            Drawable image = selectedImage.getDrawable();
+            String errorForm;
+            if ((errorForm = validForm(title, image)).equals("")) {
+                if (inputStream != null) {
+                    new SubmitImageImgurUpload(title, subreddit, MainActivity.this).execute(inputStream);
+                }
+                parent.dismiss();
+            } else {
+                String errorMessage = "Cannot be empty!";
+                switch (errorForm.toLowerCase()) {
+                    case "title":
+                        titleEditText.setError(errorMessage);
+                        break;
+                    case "image":
+                        errorText.setText(R.string.select_image);
+                        errorText.setTextColor(Color.RED);
+                        break;
+                }
+            }
+        }
+    }
+
+    private String validForm(String title, Drawable image) {
+        String error = "";
+        error += title.equals("") ? "Title, " : "";
+        error += image == null ? "Image" : "";
+        return error;
+    }
+
+    private String validForm(String title, String subreddit, String textURL) {
+        String error = "";
+        error += title.equals("") ? "Title, " : "";
+        error += subreddit.equals("") ? "Subreddit, " : "";
+        error += textURL.equals("") ? "TextURL" : "";
+        return error;
     }
 }
