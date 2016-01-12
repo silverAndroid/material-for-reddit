@@ -135,6 +135,10 @@ public class Post extends Thing implements Serializable, VotingHelper {
         return score;
     }
 
+    public void setScore(int score) {
+        this.score = score;
+    }
+
     public boolean isOver18() {
         return over18;
     }

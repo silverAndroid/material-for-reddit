@@ -73,6 +73,10 @@ public class Comment extends Thing implements VotingHelper {
         return score;
     }
 
+    public void setScore(int score) {
+        this.score = score;
+    }
+
     public double isEdited() {
         return edited;
     }
