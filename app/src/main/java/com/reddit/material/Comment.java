@@ -1,6 +1,19 @@
 package com.reddit.material;
 
+import android.util.Log;
+
+import com.google.gson.JsonObject;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.Response;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+
 import org.json.JSONArray;
+import org.json.JSONObject;
+
+import cz.msebera.android.httpclient.Header;
 
 /**
  * Created by Rushil Perera on 11/8/2015.
@@ -127,7 +140,14 @@ public class Comment extends Thing implements VotingHelper {
 
     @Override
     public void vote(int dir) {
-        ConnectionSingleton.getInstance().vote(getID(), dir);
+        String accessToken = Authentication.getInstance().getAccessToken();
+        AsyncHttpClient votingClient = new AsyncHttpClient();
+        votingClient.setUserAgent(ConstantMap.getInstance().getUserAgent());
+        votingClient.addHeader("Authorization", "bearer " + accessToken);
+        RequestParams params = new RequestParams();
+        params.put("dir", dir);
+        params.put("id", getID());
+        votingClient.post("https://oauth.reddit.com/api/vote.json", new JsonHttpResponseHandler());
     }
 
     public String getParentID() {

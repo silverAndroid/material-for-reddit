@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.Animatable;
 import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
@@ -25,8 +26,26 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.common.util.UriUtil;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.controller.BaseControllerListener;
+import com.facebook.drawee.controller.ControllerListener;
+import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.image.ImageInfo;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.reddit.material.custom.HTMLMarkupTextView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+
+import cz.msebera.android.httpclient.Header;
 
 /**
  * Created by Rushil Perera on 10/28/2015.
@@ -240,8 +259,7 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
             @Override
             public void onClick(View v) {
                 sendLayout.setVisibility(View.GONE);
-                ConnectionSingleton.getInstance().comment(editMessage.getText().toString(), post.getID(),
-                        editMessage);
+                comment(editMessage.getText().toString(), post.getID());
             }
         });
 
@@ -443,10 +461,44 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
         }
     }
 
+    public void loadImage(final Uri uri) {
+
+        ControllerListener<ImageInfo> listener = new BaseControllerListener<ImageInfo>() {
+            @Override
+            public void onFinalImageSet(String id, ImageInfo imageInfo, Animatable animatable) {
+                loading.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onFailure(String id, Throwable throwable) {
+                Log.e(TAG, "onFailure: " + uri, throwable);
+                image.setVisibility(View.GONE);
+                loading.setVisibility(View.GONE);
+            }
+        };
+
+        ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uri)
+                .setResizeOptions(new ResizeOptions(2560, 2560))
+                .setProgressiveRenderingEnabled(true)
+                .setLocalThumbnailPreviewsEnabled(true)
+                .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
+                .setAutoRotateEnabled(true)
+                .build();
+        DraweeController controller = Fresco.newDraweeControllerBuilder()
+                .setImageRequest(request)
+                .setTapToRetryEnabled(true)
+                .setOldController(image.getController())
+                .setControllerListener(listener)
+                .build();
+
+        image.setController(controller);
+    }
+
+
     private void loadImage(String imageURL) {
         image.setVisibility(View.VISIBLE);
         loading.setVisibility(View.VISIBLE);
-        ConnectionSingleton.getInstance().loadImage(imageURL, image, loading);
+        loadImage(Uri.parse(imageURL));
         nsfwTag.setVisibility(View.GONE);
     }
 
@@ -464,5 +516,34 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
     private void hideImage() {
         image.setVisibility(View.GONE);
         loading.setVisibility(View.GONE);
+    }
+
+    private void comment(final String text, final String id) {
+        AsyncHttpClient commentClient = new AsyncHttpClient();
+        commentClient.addHeader("Authorization", "bearer " + Authentication.getInstance().getAccessToken());
+        commentClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+        HashMap<String, String> bodyParams = new HashMap<>(3);
+        bodyParams.put("api_type", "json");
+        bodyParams.put("text", text);
+        bodyParams.put("thing_id", id);
+        RequestParams params = new RequestParams(bodyParams);
+        commentClient.post("https://oauth.reddit.com/api/comment/.json", params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                try {
+                    JSONObject commentsJSON = response.getJSONObject("json").getJSONObject("data").getJSONArray
+                            ("things").getJSONObject(0);
+                    String kind = commentsJSON.getString("kind");
+                    JSONObject commentJSON = commentsJSON.getJSONObject("data");
+                    if (kind.equals("t1")) {
+                        Comment comment = Util.generateComment(commentJSON);
+                        editMessage.getText().clear();
+                        CommentActivity.getAdapter().addComment(comment);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

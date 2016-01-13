@@ -12,11 +12,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.PersistentCookieStore;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import cz.msebera.android.httpclient.Header;
+
 public class SubredditFragment extends Fragment {
 
     private static final String ARG_R = "r/";
     private static final String ARG_SORT = "sort";
     private static final String ARG_TIME = "time";
+    private static final String TAG = "SubredditFragment";
 
     private static SubredditFragment instance;
     private PostAdapter adapter;
@@ -77,26 +90,46 @@ public class SubredditFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         adapter = new PostAdapter(getActivity());
         recyclerView.setAdapter(adapter);
-        ConnectionSingleton.getInstance().getSubredditData(getArguments().getString(ARG_R), getArguments().getString
-                (ARG_SORT), getArguments().getString(ARG_TIME));
+        getSubredditData(getArguments().getString(ARG_R), getArguments().getString(ARG_SORT), getArguments()
+                .getString(ARG_TIME));
         return view;
     }
 
     public void refresh() {
         adapter.clearPosts();
-        ConnectionSingleton.getInstance().getSubredditData(getArguments().getString(ARG_R), getArguments().getString
-                (ARG_SORT), getArguments().getString(ARG_TIME));
+        getSubredditData(getArguments().getString(ARG_R), getArguments().getString(ARG_SORT), getArguments()
+                .getString(ARG_TIME));
     }
 
-    public PostAdapter getAdapter() {
-        return adapter;
-    }
-
-    public SwipeRefreshLayout getSwipeRefreshLayout() {
-        return refresh;
-    }
-
-    public ProgressBar getProgressBar() {
-        return loading;
+    private void getSubredditData(String subreddit, String sort, String time) {
+        String url = "https://www.reddit.com" + (subreddit.isEmpty() ? "" : "/r/" + subreddit) + (sort.isEmpty() ? ""
+                : "/" + sort) + "/.json" + (time.isEmpty() ? "" : "?t=" + time);
+        Log.d(TAG, "getSubredditData: " + url);
+        final ArrayList<Post> posts = new ArrayList<>();
+        AsyncHttpClient subredditClient = new AsyncHttpClient();
+        final PersistentCookieStore cookieStore = new PersistentCookieStore(getContext());
+        subredditClient.setCookieStore(cookieStore);
+        subredditClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+        subredditClient.get(url, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                JSONArray postsJson;
+                try {
+                    postsJson = response.getJSONObject("data").getJSONArray("children");
+                    for (int i = 0; i < postsJson.length(); i++) {
+                        JSONObject postJSON = postsJson.getJSONObject(i).getJSONObject("data");
+                        Post post = Util.generatePost(postJSON);
+                        posts.add(post);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                adapter.addPosts(posts);
+                if (loading.getVisibility() == View.GONE)
+                    refresh.setRefreshing(false);
+                else
+                    loading.setVisibility(View.GONE);
+            }
+        });
     }
 }

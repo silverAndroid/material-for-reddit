@@ -47,7 +47,7 @@ public class SubmitImageImgurUpload extends AsyncTask<InputStream, Void, String>
     protected void onPostExecute(String response) {
         dialog.dismiss();
         if (response != null) {
-            ConnectionSingleton.getInstance().post(activity, title, response, subreddit, "link");
+            MainActivity.getInstance().post(title, response, subreddit, "link");
         }
     }
 
