@@ -260,6 +260,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     e.printStackTrace();
                 }
             }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.e(TAG, "onFailure: " + errorResponse.toString(), throwable);
+                Log.d(TAG, "onFailure: " + Authentication.getInstance().getRefreshToken());
+                System.out.println(this.getRequestURI());
+                if (errorResponse.has("error")) {
+                    Authentication.getInstance().refreshAccessToken();
+                }
+            }
         });
     }
 

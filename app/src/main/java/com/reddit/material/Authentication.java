@@ -185,6 +185,12 @@ public class Authentication {
                             e.printStackTrace();
                         }
                     }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                        Log.e(TAG, "onFailure: " + errorResponse.toString(), throwable);
+                        System.out.println(this.getRequestURI());
+                    }
                 });
     }
 
@@ -208,6 +214,12 @@ public class Authentication {
                     e.printStackTrace();
                 }
             }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.e(TAG, "onFailure: " + errorResponse.toString(), throwable);
+                System.out.println(this.getRequestURI());
+            }
         });
     }
 
@@ -228,6 +240,12 @@ public class Authentication {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.e(TAG, "onFailure: " + errorResponse.toString(), throwable);
+                System.out.println(this.getRequestURI());
             }
         });
     }
