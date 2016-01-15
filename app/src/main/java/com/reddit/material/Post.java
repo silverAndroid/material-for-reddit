@@ -240,7 +240,7 @@ public class Post extends Thing implements Serializable, VotingHelper {
         RequestParams params = new RequestParams();
         params.put("dir", dir);
         params.put("id", getID());
-        votingClient.post("https://oauth.reddit.com/api/vote.json", new JsonHttpResponseHandler());
+        votingClient.post("https://oauth.reddit.com/api/vote.json", params, new JsonHttpResponseHandler());
     }
 
     public int getVote() {
