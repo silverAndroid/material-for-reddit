@@ -34,10 +34,6 @@ public class CommentActivity extends AppCompatActivity {
         return adapter;
     }
 
-    public static ProgressBar getProgressBar() {
-        return loading;
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,7 +108,7 @@ public class CommentActivity extends AppCompatActivity {
                                     ("children");
                             adapter.addComments(commentsJSON);
 
-                            if (CommentActivity.getProgressBar().getVisibility() == View.GONE)
+                            if (loading.getVisibility() == View.GONE)
                                 refresh.setRefreshing(false);
                             else
                                 loading.setVisibility(View.GONE);
