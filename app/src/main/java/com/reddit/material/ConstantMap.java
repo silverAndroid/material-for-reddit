@@ -12,7 +12,7 @@ public class ConstantMap {
     private static final String GFYCAT = "gfycat";
     private static final String YOUTUBE_REGEX = ".*youtu\\.?be.*";
     private static final String REDDIT_REGEX = ".*redd\\.?it.*";
-    private static final String IMGUR_GALLERY_REGEX = ".*imgur\\.com/((gallery)|a).*";
+    private static final String IMGUR_GALLERY_REGEX = ".*imgur\\.com/((gallery)|a)/.*";
     private static final String BMP = ".bmp";
     private static final String PNG = ".png";
     private static final String JPEG = ".jpg";
@@ -43,6 +43,10 @@ public class ConstantMap {
     public boolean isImage(String url) {
         return url != null && (url.contains(PNG) || url.contains(JPEG) || url.contains(BMP) || url.contains(IMGUR) ||
                 url.contains(FLICKR));
+    }
+
+    public boolean hasImageEndings(String url) {
+        return url != null && (url.contains(PNG) || url.contains(JPEG) || url.contains(BMP));
     }
 
     public boolean isGIF(String url) {

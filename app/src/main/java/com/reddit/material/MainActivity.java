@@ -1,6 +1,7 @@
 package com.reddit.material;
 
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -19,9 +20,11 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -33,14 +36,28 @@ import android.widget.Toast;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.reddit.material.libraries.google.CustomTabActivityHelper;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+
+import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final int PICK_IMAGE = 100;
+    private static final String TAG = "MainActivity";
     private static MainActivity instance;
     private NavigationView navigationView;
     private CustomTabActivityHelper chromeTabsHelper;
@@ -67,11 +84,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .setResizeAndRotateEnabledForNetwork(true)
                 .build();
         Fresco.initialize(context, config);
-        ConnectionSingleton.createInstance(context);
         Authentication.newInstance(context);
 
         if (getIntent().getStringExtra("subreddit") == null) {
-            ConnectionSingleton.getInstance().getSubreddits();
+            getSubreddits();
             if (Authentication.getInstance().isLoggedIn())
                 subreddit = "frontpage";
             else
@@ -79,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getSupportActionBar().setTitle(subreddit);
             getSupportActionBar().setSubtitle("Hot");
         } else {
-            ConnectionSingleton.getInstance().getSubreddits(false);
+            getSubreddits(false);
             subreddit = getIntent().getStringExtra("subreddit");
             changeSubreddit(subreddit, "Hot");
         }
@@ -167,10 +183,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.login:
                 if (Authentication.getInstance().isLoggedIn()) {
                     Authentication.getInstance().logout();
-                    ConnectionSingleton.getInstance().reloadSubreddits();
+                    reloadSubreddits();
                     navigationView.getMenu().getItem(0).setTitle("Log in");
                 } else
-                    ConnectionSingleton.getInstance().login(MainActivity.this);
+                    Authentication.getInstance().login(MainActivity.this);
                 break;
             case R.id.search:
                 Intent intent = new Intent(this, SearchResultsActivity.class);
@@ -191,6 +207,76 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public NavigationView getNavigationView() {
         return navigationView;
+    }
+
+    public void getSubreddits() {
+        getSubreddits(true);
+    }
+
+    public void getSubreddits(final boolean loadFirstSubreddit) {
+        String accessToken = Authentication.getInstance().getAccessToken();
+        final ArrayList<Subreddit> subredditsList = new ArrayList<>();
+        AsyncHttpClient subredditLoader = new AsyncHttpClient();
+        subredditLoader.setUserAgent(ConstantMap.getInstance().getUserAgent());
+        subredditLoader.addHeader("Authorization", "bearer " + accessToken);
+        subredditLoader.get(accessToken.isEmpty() ? "https://www.reddit.com/subreddits/default/.json?limit=50" :
+                "https://oauth.reddit.com/subreddits/mine/.json", new JsonHttpResponseHandler() {
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                if (response.has("error")) {
+                    Authentication.getInstance().refreshAccessToken();
+                    return;
+                }
+
+                try {
+                    JSONArray subredditsArray = response.getJSONObject("data").getJSONArray("children");
+                    Menu menu = navigationView.getMenu();
+                    SubMenu subredditsMenu = menu.addSubMenu("Subreddits");
+                    if (Authentication.getInstance().isLoggedIn())
+                        subredditsMenu.add("frontpage");
+                    subredditsMenu.add("all");
+                    for (int i = 0; i < subredditsArray.length(); i++) {
+                        JSONObject subredditJson = subredditsArray.getJSONObject(i);
+                        String kind = subredditJson.getString("kind");
+                        if (kind.equals("t5")) {
+                            JSONObject subredditJSON = subredditJson.getJSONObject("data");
+                            Subreddit subreddit = Util.generateSubreddit(subredditJSON);
+                            subredditsList.add(subreddit);
+                        }
+                    }
+                    Collections.sort(subredditsList, new Comparator<Subreddit>() {
+                        @Override
+                        public int compare(Subreddit lhs, Subreddit rhs) {
+                            return lhs.getName().compareTo(rhs.getName());
+                        }
+                    });
+                    for (Subreddit subreddit : subredditsList) {
+                        subredditsMenu.add(subreddit.getName());
+                    }
+                    if (loadFirstSubreddit)
+                        onNavigationItemSelected(subredditsMenu.getItem(0));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.e(TAG, "onFailure: " + errorResponse.toString(), throwable);
+                Log.d(TAG, "onFailure: " + Authentication.getInstance().getRefreshToken());
+                System.out.println(this.getRequestURI());
+                if (errorResponse.has("error")) {
+                    Authentication.getInstance().refreshAccessToken();
+                }
+            }
+        });
+    }
+
+    public void reloadSubreddits() {
+        navigationView.getMenu().removeItem(0);
+        invalidateOptionsMenu();
+        getSubreddits();
     }
 
     @Override
@@ -397,8 +483,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String textURL = textURLEdit.getText().toString();
             String errorForm;
             if ((errorForm = validForm(title, subreddit, textURL)).equals("")) {
-                ConnectionSingleton.getInstance().post(MainActivity.this, title, textURL, subreddit, selected == 0 ?
-                        "self" : "link");
+                post(title, textURL, subreddit, selected == 0 ? "self" : "link");
                 parent.dismiss();
             } else {
                 String[] errors = errorForm.split(", ");
@@ -440,6 +525,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         }
+    }
+
+    public void post(String title, String textURL, String subreddit, String kind) {
+        final ProgressDialog submitRedditDialog = new ProgressDialog(this, R.style.DialogTheme);
+        submitRedditDialog.setMessage(String.format("Submitting post to r/%s...", subreddit));
+        submitRedditDialog.show();
+        AsyncHttpClient postClient = new AsyncHttpClient();
+        postClient.setUserAgent(ConstantMap.getInstance().getUserAgent());
+        postClient.addHeader("Authorization", "bearer " + Authentication.getInstance().getAccessToken());
+        HashMap<String, String> bodyParams = new HashMap<>();
+        bodyParams.put("api_type", "json");
+        bodyParams.put("kind", kind);
+        bodyParams.put("resubmit", "false");
+        bodyParams.put("sr", subreddit);
+        bodyParams.put(kind.equals("self") ? "text" : "url", textURL);
+        bodyParams.put("title", title);
+        bodyParams.put("extension", "json");
+        RequestParams params = new RequestParams(bodyParams);
+        postClient.post("https://oauth.reddit.com/api/submit.json", params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                submitRedditDialog.dismiss();
+                try {
+                    String redditURL = response.getJSONObject("json").getJSONObject("data").getString("url");
+                    Intent intent = new Intent(MainActivity.this, CommentActivity.class);
+                    intent.putExtra("permalink", "/" + redditURL.replaceFirst("https?://(www\\.)?redd.?it(.com)?/",
+                            ""));
+                    MainActivity.this.startActivity(intent);
+                } catch (JSONException e) {
+                    Log.d(TAG, "JSONException: " + response.toString());
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private String validForm(String title, Drawable image) {

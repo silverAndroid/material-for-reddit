@@ -8,9 +8,9 @@
 
     <RadioGroup
         android:id="@+id/radio_group_options"
-        android:checkedButton="@+id/radio_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:checkedButton="@+id/radio_text"
         android:orientation="horizontal">
 
         <RadioButton

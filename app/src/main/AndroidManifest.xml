@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.reddit.material"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    package="com.reddit.material"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
@@ -52,9 +53,10 @@
             android:name=".ImageGalleryActivity"
             android:label="@string/title_activity_image_gallery"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="645caf81cfeaa941df26f2ee3a0def5b2f334736" />
+            android:value="645caf81cfeaa941df26f2ee3a0def5b2f334736"/>
     </application>
 
 </manifest>

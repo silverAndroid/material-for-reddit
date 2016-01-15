@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/linear_layout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/white_rounded_rectangle"
-    android:orientation="vertical">
+<LinearLayout android:id="@+id/linear_layout"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@drawable/white_rounded_rectangle"
+              android:orientation="vertical">
 
     <TextView
         android:id="@+id/title"
@@ -16,7 +16,7 @@
         android:layout_marginTop="8dp"
         android:text="3 Must Have Apps for Those Not Rooting"
         android:textColor="#000000"
-        android:textSize="20sp" />
+        android:textSize="20sp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,7 +33,7 @@
             android:layout_marginTop="4dp"
             android:background="@drawable/grey_rounded_rectangle"
             android:text="Screenshot"
-            android:textColor="#ffffff" />
+            android:textColor="#ffffff"/>
 
         <TextView
             android:id="@+id/nsfw_tag"
@@ -46,27 +46,27 @@
             android:background="@drawable/red_rounded_rectangle"
             android:text="@string/nsfw"
             android:textColor="#ffffff"
-            android:textSize="12sp" />
+            android:textSize="12sp"/>
     </LinearLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <com.facebook.drawee.view.SimpleDraweeView xmlns:fresco="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/image"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            android:maxHeight="250dp"
-            fresco:actualImageScaleType="centerCrop" />
+        <com.facebook.drawee.view.SimpleDraweeView android:id="@+id/image"
+                                                   xmlns:fresco="http://schemas.android.com/apk/res-auto"
+                                                   android:layout_width="match_parent"
+                                                   android:layout_height="wrap_content"
+                                                   android:adjustViewBounds="true"
+                                                   android:maxHeight="250dp"
+                                                   fresco:actualImageScaleType="centerCrop"/>
 
         <ProgressBar
             android:id="@+id/loading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:indeterminate="false" />
+            android:indeterminate="false"/>
     </RelativeLayout>
 
     <com.reddit.material.custom.HTMLMarkupTextView
@@ -78,7 +78,7 @@
         android:layout_marginTop="8dp"
         android:autoLink="all"
         android:linksClickable="true"
-        android:textColor="#000000" />
+        android:textColor="#000000"/>
 
     <TextView
         android:id="@+id/lineOneInfo"
@@ -89,7 +89,7 @@
         android:layout_marginTop="8dp"
         android:text="@string/html"
         android:textColor="#000000"
-        android:textSize="16sp" />
+        android:textSize="16sp"/>
 
     <LinearLayout
         android:id="@+id/lineTwoInfo"
@@ -106,7 +106,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/blue_rounded_rectangle"
             android:text="en.wikipedia.org"
-            android:textColor="#ffffff" />
+            android:textColor="#ffffff"/>
 
         <TextView
             android:id="@+id/timeSubredditInfo"
@@ -116,18 +116,18 @@
             android:layout_marginRight="8dp"
             android:layout_gravity="center|fill_horizontal"
             android:text="@string/html2"
-            android:textColor="#000000" />
+            android:textColor="#000000"/>
     </LinearLayout>
 
     <include
         android:id="@+id/include"
         layout="@layout/layout_options"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"/>
 
     <include
         android:id="@+id/include_send"
         layout="@layout/layout_send"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"/>
 </LinearLayout>

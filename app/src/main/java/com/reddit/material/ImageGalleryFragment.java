@@ -1,16 +1,27 @@
 package com.reddit.material;
 
 
+import android.graphics.drawable.Animatable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.backends.pipeline.PipelineDraweeControllerBuilder;
+import com.facebook.drawee.controller.BaseControllerListener;
+import com.facebook.drawee.controller.ControllerListener;
 import com.facebook.drawee.drawable.ScalingUtils;
 import com.facebook.drawee.generic.GenericDraweeHierarchy;
 import com.facebook.drawee.generic.GenericDraweeHierarchyBuilder;
+import com.facebook.drawee.interfaces.DraweeController;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.reddit.material.libraries.facebook.ZoomableDraweeView;
 
 
@@ -21,8 +32,11 @@ import com.reddit.material.libraries.facebook.ZoomableDraweeView;
  */
 public class ImageGalleryFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
+    private static final String TAG = "ImageGalleryFragment";
 
     private Image image;
+    private ZoomableDraweeView imageView;
+    private ProgressBar loading;
 
 
     public ImageGalleryFragment() {
@@ -57,13 +71,59 @@ public class ImageGalleryFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_image_gallery, container, false);
-        ZoomableDraweeView draweeView = (ZoomableDraweeView) view.findViewById(R.id.image);
+        imageView = (ZoomableDraweeView) view.findViewById(R.id.image);
         GenericDraweeHierarchy hierarchy = new GenericDraweeHierarchyBuilder(getResources())
                 .setActualImageScaleType(ScalingUtils.ScaleType.FIT_CENTER)
                 .build();
-        draweeView.setHierarchy(hierarchy);
-        ProgressBar loading = (ProgressBar) view.findViewById(R.id.loading);
-        ConnectionSingleton.getInstance().loadImage(image.getLowResURL(), image.getUrl(), draweeView, loading);
+        imageView.setHierarchy(hierarchy);
+        loading = (ProgressBar) view.findViewById(R.id.loading);
+        loadImage(image.getLowResURL(), image.getUrl());
         return view;
+    }
+
+    private void loadImage(String lowResURL, final String url) {
+
+        ControllerListener listener = new BaseControllerListener() {
+            @Override
+            public void onFinalImageSet(String id, Object imageInfo, Animatable animatable) {
+                loading.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onFailure(String id, Throwable throwable) {
+                Log.e(TAG, "onFailure: Image URL: " + url, throwable);
+                loading.setVisibility(View.GONE);
+            }
+        };
+
+        ImageRequest lowResRequest = null;
+        if (lowResURL != null)
+            lowResRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(lowResURL))
+                    .setResizeOptions(new ResizeOptions(2560, 2560))
+                    .setProgressiveRenderingEnabled(true)
+                    .setLocalThumbnailPreviewsEnabled(true)
+                    .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
+                    .setAutoRotateEnabled(true)
+                    .build();
+
+        ImageRequest request = ImageRequestBuilder.newBuilderWithSource(Uri.parse(url))
+                .setResizeOptions(new ResizeOptions(2560, 2560))
+                .setProgressiveRenderingEnabled(true)
+                .setLocalThumbnailPreviewsEnabled(true)
+                .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
+                .setAutoRotateEnabled(true)
+                .build();
+
+        PipelineDraweeControllerBuilder controllerBuilder = Fresco.newDraweeControllerBuilder()
+                .setImageRequest(request)
+                .setTapToRetryEnabled(true)
+                .setOldController(imageView.getController())
+                .setControllerListener(listener);
+
+        if (lowResRequest != null)
+            controllerBuilder.setLowResImageRequest(lowResRequest);
+
+        DraweeController controller = controllerBuilder.build();
+        imageView.setController(controller);
     }
 }

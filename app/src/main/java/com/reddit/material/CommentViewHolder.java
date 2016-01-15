@@ -19,9 +19,18 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.reddit.material.custom.HTMLMarkupTextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import cz.msebera.android.httpclient.Header;
 
 /**
  * Created by Rushil Perera on 11/8/2015.
@@ -117,7 +126,7 @@ public class CommentViewHolder extends RecyclerView.ViewHolder implements View.O
         formatNumberList.setOnClickListener(this);
     }
 
-    public void init(final Comment comment) {
+    public void init(final NormalComment comment) {
         username.setText(comment.getAuthor());
         text.setActivity(activity);
         text.setParent(itemView);
@@ -192,8 +201,7 @@ public class CommentViewHolder extends RecyclerView.ViewHolder implements View.O
         submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ConnectionSingleton.getInstance().comment(editMessage.getText().toString(), comment.getID(),
-                        editMessage);
+                comment(editMessage.getText().toString(), comment.getID());
             }
         });
     }
@@ -371,5 +379,34 @@ public class CommentViewHolder extends RecyclerView.ViewHolder implements View.O
             default:
                 break;
         }
+    }
+
+    private void comment(final String text, final String id) {
+        AsyncHttpClient commentClient = new AsyncHttpClient();
+        commentClient.addHeader("Authorization", "bearer " + Authentication.getInstance().getAccessToken());
+        commentClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+        HashMap<String, String> bodyParams = new HashMap<>(3);
+        bodyParams.put("api_type", "json");
+        bodyParams.put("text", text);
+        bodyParams.put("thing_id", id);
+        RequestParams params = new RequestParams(bodyParams);
+        commentClient.post("https://oauth.reddit.com/api/comment/.json", params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                try {
+                    JSONObject commentsJSON = response.getJSONObject("json").getJSONObject("data").getJSONArray
+                            ("things").getJSONObject(0);
+                    String kind = commentsJSON.getString("kind");
+                    JSONObject commentJSON = commentsJSON.getJSONObject("data");
+                    if (kind.equals("t1")) {
+                        Comment comment = Util.generateComment(commentJSON);
+                        editMessage.getText().clear();
+                        CommentActivity.getAdapter().addComment(comment);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

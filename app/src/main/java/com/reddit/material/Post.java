@@ -1,5 +1,9 @@
 package com.reddit.material;
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+
 import java.io.Serializable;
 
 /**
@@ -229,7 +233,14 @@ public class Post extends Thing implements Serializable, VotingHelper {
 
     @Override
     public void vote(int dir) {
-        ConnectionSingleton.getInstance().vote(getID(), dir);
+        String accessToken = Authentication.getInstance().getAccessToken();
+        AsyncHttpClient votingClient = new AsyncHttpClient();
+        votingClient.setUserAgent(ConstantMap.getInstance().getUserAgent());
+        votingClient.addHeader("Authorization", "bearer " + accessToken);
+        RequestParams params = new RequestParams();
+        params.put("dir", dir);
+        params.put("id", getID());
+        votingClient.post("https://oauth.reddit.com/api/vote.json", params, new JsonHttpResponseHandler());
     }
 
     public int getVote() {

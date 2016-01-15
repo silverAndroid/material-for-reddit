@@ -8,26 +8,30 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.PersistentCookieStore;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import cz.msebera.android.httpclient.Header;
+
 public class CommentActivity extends AppCompatActivity {
 
+    private static final String TAG = "CommentActivity";
     private static CommentAdapter adapter;
     private static SwipeRefreshLayout refresh;
     private static ProgressBar loading;
 
     public static CommentAdapter getAdapter() {
         return adapter;
-    }
-
-    public static ProgressBar getProgressBar() {
-        return loading;
-    }
-
-    public static SwipeRefreshLayout getSwipeRefreshLayout() {
-        return refresh;
     }
 
     @Override
@@ -56,7 +60,7 @@ public class CommentActivity extends AppCompatActivity {
                 refresh();
             }
         });
-        ConnectionSingleton.getInstance().getLinkData(post == null ? permalink : post.getPermalink());
+        getLinkData(post == null ? permalink : post.getPermalink());
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -82,6 +86,50 @@ public class CommentActivity extends AppCompatActivity {
 
     public void refresh() {
         String postPermalink = adapter.clearData();
-        ConnectionSingleton.getInstance().getLinkData(postPermalink);
+        getLinkData(postPermalink);
+    }
+
+    private void getLinkData(String permalink) {
+        final Post[] post = new Post[1];
+        AsyncHttpClient subredditClient = new AsyncHttpClient();
+        final PersistentCookieStore cookieStore = new PersistentCookieStore(getBaseContext());
+        subredditClient.setCookieStore(cookieStore);
+        subredditClient.setUserAgent(ConstantMap.getInstance().getConstant("user_agent"));
+        subredditClient.get("https://www.reddit.com" + permalink.replace("/?ref=search_posts", "") + "/.json", new
+                JsonHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                        try {
+                            JSONArray postJSON = response.getJSONObject(0).getJSONObject("data").getJSONArray
+                                    ("children");
+                            post[0] = Util.generatePost(postJSON.getJSONObject(0).getJSONObject("data"));
+                            adapter.setPost(post[0]);
+                            JSONArray commentsJSON = response.getJSONObject(1).getJSONObject("data").getJSONArray
+                                    ("children");
+                            adapter.addComments(commentsJSON);
+
+                            if (loading.getVisibility() == View.GONE)
+                                refresh.setRefreshing(false);
+                            else
+                                loading.setVisibility(View.GONE);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject
+                            errorResponse) {
+                        Log.e(TAG, "onFailure: " + errorResponse.toString(), throwable);
+                        Log.d(TAG, "onFailure: " + this.getRequestURI().toString());
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, String responseString, Throwable
+                            throwable) {
+                        Log.e(TAG, "onFailure: " + responseString, throwable);
+                        Log.d(TAG, "onFailure: " + this.getRequestURI().toString());
+                    }
+                });
     }
 }
