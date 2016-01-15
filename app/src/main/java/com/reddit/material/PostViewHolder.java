@@ -508,14 +508,15 @@ public class PostViewHolder extends RecyclerView.ViewHolder implements View.OnCl
                 .path(String.valueOf(R.drawable.nsfw_reddit_icon))
                 .build();
         image.setVisibility(View.VISIBLE);
-        image.setImageURI(nsfwPath);
         loading.setVisibility(View.GONE);
         nsfwTag.setVisibility(View.VISIBLE);
+        loadImage(nsfwPath);
     }
 
     private void hideImage() {
         image.setVisibility(View.GONE);
         loading.setVisibility(View.GONE);
+        nsfwTag.setVisibility(View.GONE);
     }
 
     private void comment(final String text, final String id) {
