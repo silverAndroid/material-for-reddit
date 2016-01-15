@@ -126,7 +126,7 @@ public class CommentViewHolder extends RecyclerView.ViewHolder implements View.O
         formatNumberList.setOnClickListener(this);
     }
 
-    public void init(final Comment comment) {
+    public void init(final NormalComment comment) {
         username.setText(comment.getAuthor());
         text.setActivity(activity);
         text.setParent(itemView);
