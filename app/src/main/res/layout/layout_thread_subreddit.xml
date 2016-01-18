@@ -105,7 +105,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/blue_rounded_rectangle"
-            android:text="en.wikipedia.orghueifhewuifhuewifhib"
+            android:text="en.wikipedia.org"
             android:textColor="#ffffff"/>
 
         <TextView
