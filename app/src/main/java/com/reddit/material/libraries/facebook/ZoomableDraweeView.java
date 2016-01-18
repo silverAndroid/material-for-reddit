@@ -32,7 +32,7 @@ import com.facebook.drawee.view.DraweeView;
 
 /**
  * DraweeView that has zoomable capabilities.
- * <p>
+ * <p/>
  * Once the image loads, pinch-to-zoom and translation gestures are enabled.
  */
 public class ZoomableDraweeView extends DraweeView<GenericDraweeHierarchy> implements ZoomableController.Listener {
@@ -102,7 +102,7 @@ public class ZoomableDraweeView extends DraweeView<GenericDraweeHierarchy> imple
 
     /**
      * Sets the controllers for the normal and huge image.
-     * <p>
+     * <p/>
      * <p> IMPORTANT: in order to avoid a flicker when switching to the huge image, the huge image
      * controller should have the normal-image-uri set as its low-res-uri.
      *

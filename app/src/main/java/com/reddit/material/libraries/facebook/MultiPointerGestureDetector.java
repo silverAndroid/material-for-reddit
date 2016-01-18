@@ -18,7 +18,7 @@ import android.view.MotionEvent;
 
 /**
  * Component that detects and tracks multiple pointers based on touch events.
- * <p>
+ * <p/>
  * Each time a pointer gets pressed or released, the current gesture (if any) will end, and a new
  * one will be started (if there are still pressed pointers left). It is guaranteed that the number
  * of pointers within the single gesture will remain the same during the whole gesture.
