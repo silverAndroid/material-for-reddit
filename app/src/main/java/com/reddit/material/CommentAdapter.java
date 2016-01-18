@@ -101,7 +101,7 @@ public class CommentAdapter extends RecyclerView.Adapter {
                 String kind = commentsJSON.getJSONObject(i).getString("kind");
                 commentJSON = commentsJSON.getJSONObject(i).getJSONObject("data");
                 if (kind.equals("t1")) {
-                    Comment comment = Util.generateComment(commentJSON);
+                    NormalComment comment = Util.generateNormalComment(commentJSON);
                     if (comment != null) {
                         comment.setDepth(0);
                         comments.add(comment);
@@ -129,7 +129,7 @@ public class CommentAdapter extends RecyclerView.Adapter {
                 String kind = commentsJSON.getJSONObject(i).getString("kind");
                 JSONObject commentJSON = commentsJSON.getJSONObject(i).getJSONObject("data");
                 if (kind.equals("t1")) {
-                    Comment comment = Util.generateComment(commentJSON);
+                    Comment comment = Util.generateNormalComment(commentJSON);
                     if (comment != null) {
                         comment.setDepth(depth);
                         this.comments.add(comment);

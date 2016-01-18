@@ -46,15 +46,15 @@ public class Util {
         return null;
     }
 
-    public static Comment generateComment(JSONObject object) {
+    public static NormalComment generateNormalComment(JSONObject object) {
         try {
-            Comment comment;
-            comment = new Comment(object.getString("subreddit_id"), object.getString("link_id"), object.getBoolean
-                    ("saved"), object.getString("name"), object.getInt("gilded"), object.getBoolean("archived"),
-                    object.getString("author"), object.getInt("score"), object.getString("body_html"), object.optDouble
-                    ("edited", -1.0), object.getBoolean("score_hidden"), object.getLong("created_utc"), object.isNull
-                    ("author_flair_text") ? "" : object.getString("author_flair_text"), object.isNull("likes") ? 0 :
-                    object.getBoolean("likes") ? 1 : -1, null);
+            NormalComment comment;
+            comment = new NormalComment(object.getString("name"), object.getString("parent_id"), object.getString
+                    ("subreddit_id"), object.getString("link_id"), object.getBoolean("saved"), object.getInt
+                    ("gilded"), object.getBoolean("archived"), object.getString("author"), object.getInt("score"),
+                    object.getString("body_html"), object.optDouble("edited", -1.0), object.getBoolean
+                    ("score_hidden"), object.getLong("created_utc"), object.isNull("author_flair_text") ? "" : object
+                    .getString("author_flair_text"), object.isNull("likes") ? 0 : object.getBoolean("likes") ? 1 : -1);
             comment.setReplies(object.optJSONObject("replies") == null ? null : object
                     .getJSONObject("replies").getJSONObject("data").getJSONArray("children"));
             comment.setUserReports(object.getJSONArray("user_reports"));
