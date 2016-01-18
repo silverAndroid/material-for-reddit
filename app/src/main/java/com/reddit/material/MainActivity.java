@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final int PICK_IMAGE = 100;
     private static final String TAG = "MainActivity";
     private static MainActivity instance;
+    private final ArrayList<Subreddit> subredditsList = new ArrayList<>();
     private NavigationView navigationView;
     private CustomTabActivityHelper chromeTabsHelper;
     private String subreddit = "";
@@ -215,7 +216,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void getSubreddits(final boolean loadFirstSubreddit) {
         String accessToken = Authentication.getInstance().getAccessToken();
-        final ArrayList<Subreddit> subredditsList = new ArrayList<>();
         AsyncHttpClient subredditLoader = new AsyncHttpClient();
         subredditLoader.setUserAgent(ConstantMap.getInstance().getUserAgent());
         subredditLoader.addHeader("Authorization", "bearer " + accessToken);
@@ -230,7 +230,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
 
                 try {
-                    JSONArray subredditsArray = response.getJSONObject("data").getJSONArray("children");
+                    JSONObject dataObject = response.getJSONObject("data");
+                    JSONArray subredditsArray = dataObject.getJSONArray("children");
                     Menu menu = navigationView.getMenu();
                     SubMenu subredditsMenu = menu.addSubMenu("Subreddits");
                     if (Authentication.getInstance().isLoggedIn())
@@ -245,17 +246,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             subredditsList.add(subreddit);
                         }
                     }
-                    Collections.sort(subredditsList, new Comparator<Subreddit>() {
-                        @Override
-                        public int compare(Subreddit lhs, Subreddit rhs) {
-                            return lhs.getName().compareTo(rhs.getName());
+
+                    boolean hasAfter = !dataObject.isNull("after");
+
+                    if (!hasAfter) {
+                        Collections.sort(subredditsList, new Comparator<Subreddit>() {
+                            @Override
+                            public int compare(Subreddit lhs, Subreddit rhs) {
+                                return lhs.getName().compareTo(rhs.getName());
+                            }
+                        });
+                        for (Subreddit subreddit : subredditsList) {
+                            subredditsMenu.add(subreddit.getName());
                         }
-                    });
-                    for (Subreddit subreddit : subredditsList) {
-                        subredditsMenu.add(subreddit.getName());
+                        if (loadFirstSubreddit)
+                            onNavigationItemSelected(subredditsMenu.getItem(0));
+                    } else {
+                        getSubreddits(loadFirstSubreddit, dataObject.getString("after"), subredditsMenu);
                     }
-                    if (loadFirstSubreddit)
-                        onNavigationItemSelected(subredditsMenu.getItem(0));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -264,10 +272,61 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                 Log.e(TAG, "onFailure: " + errorResponse.toString(), throwable);
-                Log.d(TAG, "onFailure: " + Authentication.getInstance().getRefreshToken());
-                System.out.println(this.getRequestURI());
                 if (errorResponse.has("error")) {
                     Authentication.getInstance().refreshAccessToken();
+                }
+            }
+        });
+    }
+
+    public void getSubreddits(final boolean loadFirstSubreddit, String afterID, final SubMenu subredditsMenu) {
+        String accessToken = Authentication.getInstance().getAccessToken();
+        AsyncHttpClient subredditLoader = new AsyncHttpClient();
+        subredditLoader.setUserAgent(ConstantMap.getInstance().getUserAgent());
+        subredditLoader.addHeader("Authorization", "bearer " + accessToken);
+        RequestParams params = new RequestParams();
+        params.put("after", afterID);
+        subredditLoader.get("https://oauth.reddit.com/subreddits/mine/.json", params, new JsonHttpResponseHandler() {
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                if (response.has("error")) {
+                    Authentication.getInstance().refreshAccessToken();
+                    return;
+                }
+
+                try {
+                    JSONObject dataObject = response.getJSONObject("data");
+                    JSONArray subredditsArray = dataObject.getJSONArray("children");
+                    for (int i = 0; i < subredditsArray.length(); i++) {
+                        JSONObject subredditJson = subredditsArray.getJSONObject(i);
+                        String kind = subredditJson.getString("kind");
+                        if (kind.equals("t5")) {
+                            JSONObject subredditJSON = subredditJson.getJSONObject("data");
+                            Subreddit subreddit = Util.generateSubreddit(subredditJSON);
+                            subredditsList.add(subreddit);
+                        }
+                    }
+
+                    boolean hasAfter = !dataObject.isNull("after");
+
+                    if (!hasAfter) {
+                        Collections.sort(subredditsList, new Comparator<Subreddit>() {
+                            @Override
+                            public int compare(Subreddit lhs, Subreddit rhs) {
+                                return lhs.getName().compareTo(rhs.getName());
+                            }
+                        });
+                        for (Subreddit subreddit : subredditsList) {
+                            subredditsMenu.add(subreddit.getName());
+                        }
+                        if (loadFirstSubreddit)
+                            onNavigationItemSelected(subredditsMenu.getItem(0));
+                    } else {
+                        getSubreddits(loadFirstSubreddit, dataObject.getString("after"), subredditsMenu);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
             }
         });
