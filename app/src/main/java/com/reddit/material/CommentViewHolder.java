@@ -399,7 +399,7 @@ public class CommentViewHolder extends RecyclerView.ViewHolder implements View.O
                     String kind = commentsJSON.getString("kind");
                     JSONObject commentJSON = commentsJSON.getJSONObject("data");
                     if (kind.equals("t1")) {
-                        Comment comment = Util.generateComment(commentJSON);
+                        NormalComment comment = Util.generateNormalComment(commentJSON);
                         editMessage.getText().clear();
                         CommentActivity.getAdapter().addComment(comment);
                     }
