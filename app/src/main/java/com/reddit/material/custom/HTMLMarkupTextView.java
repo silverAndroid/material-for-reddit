@@ -48,9 +48,9 @@ import javax.xml.parsers.SAXParserFactory;
 public class HTMLMarkupTextView extends TextView {
 
     private static final String TAG = "HTMLMarkupTextView";
-    private final ArrayDeque<String> urls = new ArrayDeque<>();
-    private final ArrayDeque<String> lists = new ArrayDeque<>();
-    private final ArrayDeque<Integer> counts = new ArrayDeque<>();
+    private ArrayDeque<String> urls;
+    private ArrayDeque<String> lists;
+    private ArrayDeque<Integer> counts;
     private SpannableStringBuilder markup;
     private Activity activity;
     private DefaultHandler handler;
@@ -77,6 +77,9 @@ public class HTMLMarkupTextView extends TextView {
 
     public void setHTMLText(String html) {
         markup = new SpannableStringBuilder();
+        urls = new ArrayDeque<>();
+        lists = new ArrayDeque<>();
+        counts = new ArrayDeque<>();
         if (html != null && !html.equalsIgnoreCase("null")) {
             html = html.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&apos;", "'").replace
                     ("&amp;", "&").replace("</del>", "</strike>").replace("<del>", "<strike>").replace("<!-- SC_OFF " +
@@ -230,9 +233,10 @@ public class HTMLMarkupTextView extends TextView {
                     lists.offer(tagName);
                     counts.offer(1);
                 } else if (tagName.equalsIgnoreCase("li")) {
-                    if (lists.peek().equalsIgnoreCase("ul")) {
+                    String tag = lists.peek();
+                    if (tag.equalsIgnoreCase("ul")) {
                         startTag(new BulletSpan());
-                    } else if (lists.peek().equalsIgnoreCase("ol")) {
+                    } else if (tag.equalsIgnoreCase("ol")) {
                         startTagOl();
                     }
                 }
@@ -251,8 +255,8 @@ public class HTMLMarkupTextView extends TextView {
                         .equalsIgnoreCase("cite") || tagName.equalsIgnoreCase("dfn")) {
                     endTag(new StyleSpan(Typeface.ITALIC), StyleSpan.class);
                 } else if (tagName.equalsIgnoreCase("blockquote")) {
-                    handleTagP();
                     endTag(new QuoteSpan(), QuoteSpan.class);
+                    handleTagP();
                 } else if (tagName.equalsIgnoreCase("u")) {
                     endTag(new UnderlineSpan(), UnderlineSpan.class);
                 } else if (tagName.equalsIgnoreCase("sup")) {
@@ -270,9 +274,6 @@ public class HTMLMarkupTextView extends TextView {
                         endTag(new BulletSpan(), BulletSpan.class);
                         markup.append("\n\n");
                     } else if (lists.peek().equalsIgnoreCase("ol")) {
-                        /*int count = counts.poll();
-                        markup.insert(0, count++ + ".");
-                        counts.offer(count);*/
                         endTagOl();
                     }
                 }
