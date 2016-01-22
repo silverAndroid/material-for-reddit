@@ -97,7 +97,8 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp">
 
         <TextView
             android:id="@+id/source"
@@ -113,6 +114,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
+            android:layout_gravity="fill_horizontal"
             android:text="@string/html2"
             android:textColor="#000000"/>
     </LinearLayout>
