@@ -72,7 +72,6 @@ public class UnloadedCommentViewHolder extends RecyclerView.ViewHolder {
             @Override
             public void onClick(View v) {
                 loading.setVisibility(View.VISIBLE);
-                Log.d("test", "onClick: " + comments.getChildren());
             }
         });
     }
