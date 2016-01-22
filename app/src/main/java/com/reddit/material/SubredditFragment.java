@@ -130,6 +130,11 @@ public class SubredditFragment extends Fragment {
                 else
                     loading.setVisibility(View.GONE);
             }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.e(TAG, "onFailure: " + this.getRequestURI() + ", " + responseString, throwable);
+            }
         });
     }
 }
