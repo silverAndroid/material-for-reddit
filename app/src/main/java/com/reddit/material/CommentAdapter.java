@@ -59,12 +59,12 @@ public class CommentAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemCount() {
-        return comments.size() + 1;
+        return post == null ? 0 : comments.size() + 1;
     }
 
     @Override
     public int getItemViewType(int position) {
-        return position == 0 && post != null ? 1 : comments.get(position - 1) instanceof NormalComment ? 0 : 2;
+        return position == 0 ? 1 : comments.get(position - 1) instanceof NormalComment ? 0 : 2;
     }
 
     public Post getPost() {
@@ -73,20 +73,18 @@ public class CommentAdapter extends RecyclerView.Adapter {
 
     public void setPost(Post post) {
         this.post = post;
-        notifyDataSetChanged();
+        notifyItemInserted(0);
     }
 
     public void addComment(Comment comment) {
-        if (post.getID().equals(comment.getParentID())) {
-            comment.setDepth(0);
+        if (comment.getParent() == null) {
             comments.add(comment);
             notifyItemInserted(comments.size());
             return;
         }
         for (int i = 0; i < comments.size(); i++) {
             Comment parentComment = comments.get(i);
-            if (parentComment.getID().equals(comment.getParentID())) {
-                comment.setDepth(parentComment.getDepth() + 1);
+            if (parentComment.equals(comment.getParent())) {
                 comments.add(i + 1, comment);
                 notifyItemInserted(i + 2);
                 break;
@@ -101,18 +99,16 @@ public class CommentAdapter extends RecyclerView.Adapter {
                 String kind = commentsJSON.getJSONObject(i).getString("kind");
                 commentJSON = commentsJSON.getJSONObject(i).getJSONObject("data");
                 if (kind.equals("t1")) {
-                    Comment comment = Util.generateComment(commentJSON);
+                    NormalComment comment = Util.generateNormalComment(commentJSON);
                     if (comment != null) {
-                        comment.setDepth(0);
                         comments.add(comment);
                         if (comment.getReplies() != null)
-                            addComments(comment.getReplies()/*, 1*/);
+                            addComments(comment);
                     } else
                         Log.d(TAG, "onSuccess: " + commentJSON);
                 } else if (kind.equals("more")) {
                     UnloadedComments comments = Util.generateUnloadedComments(commentJSON);
                     if (comments != null) {
-                        comments.setDepth(0);
                         this.comments.add(comments);
                     }
                 }
@@ -123,23 +119,24 @@ public class CommentAdapter extends RecyclerView.Adapter {
         notifyDataSetChanged();
     }
 
-    /*public void addComments(JSONArray commentsJSON, int depth) {
+    public void addComments(NormalComment parent) {
+        JSONArray commentsJSON = parent.getReplies();
         for (int i = 0; i < commentsJSON.length(); i++) {
             try {
                 String kind = commentsJSON.getJSONObject(i).getString("kind");
                 JSONObject commentJSON = commentsJSON.getJSONObject(i).getJSONObject("data");
                 if (kind.equals("t1")) {
-                    Comment comment = Util.generateComment(commentJSON);
+                    NormalComment comment = Util.generateNormalComment(commentJSON);
                     if (comment != null) {
-                        comment.setDepth(depth);
+                        comment.setParent(parent);
                         this.comments.add(comment);
                         if (comment.getReplies() != null)
-                            addComments(comment.getReplies(), ++depth);
+                            addComments(comment);
                     }
                 } else if (kind.equals("more")) {
                     UnloadedComments comments = Util.generateUnloadedComments(commentJSON);
                     if (comments != null) {
-                        comments.setDepth(depth);
+                        comments.setParent(parent);
                         this.comments.add(comments);
                     }
                 }
@@ -147,7 +144,7 @@ public class CommentAdapter extends RecyclerView.Adapter {
                 e.printStackTrace();
             }
         }
-    }*/
+    }
 
     public String clearData() {
         notifyItemRangeRemoved(1, comments.size());
