@@ -1,5 +1,6 @@
 package com.reddit.material;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,6 +13,7 @@ import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -72,6 +74,12 @@ public class SearchResultsActivity extends AppCompatActivity {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                     handled = true;
                     search(v.getText().toString());
+
+                    View view = SearchResultsActivity.this.getCurrentFocus();
+                    if (view != null) {
+                        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    }
                 }
                 return handled;
             }
@@ -82,6 +90,12 @@ public class SearchResultsActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 search(searchBox.getText().toString());
+
+                View view = SearchResultsActivity.this.getCurrentFocus();
+                if (view != null) {
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                }
             }
         });
 
@@ -120,8 +134,10 @@ public class SearchResultsActivity extends AppCompatActivity {
             query += query.isEmpty() ? filters : (" " + filters);
         this.query = query;
         adapter.clear();
-        if (fragment != null)
+        if (fragment != null) {
             getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+            getSupportFragmentManager().popBackStack();
+        }
         progressBar.setVisibility(View.VISIBLE);
         searchQuery(query);
         fragment = null;

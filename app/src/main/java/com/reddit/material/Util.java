@@ -12,6 +12,8 @@ import com.reddit.material.libraries.google.CustomTabActivityHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.regex.Pattern;
+
 /**
  * Created by Rushil Perera on 1/1/2016.
  */
@@ -49,7 +51,7 @@ public class Util {
     public static NormalComment generateNormalComment(JSONObject object) {
         try {
             NormalComment comment;
-            comment = new NormalComment(object.getString("name"), object.getString("parent_id"), object.getString
+            comment = new NormalComment(object.getString("name"), object.getString
                     ("subreddit_id"), object.getString("link_id"), object.getBoolean("saved"), object.getInt
                     ("gilded"), object.getBoolean("archived"), object.getString("author"), object.getInt("score"),
                     object.getString("body_html"), object.optDouble("edited", -1.0), object.getBoolean
@@ -68,8 +70,8 @@ public class Util {
     public static UnloadedComments generateUnloadedComments(JSONObject object) {
         try {
             UnloadedComments comments;
-            comments = new UnloadedComments(object.getString("name"), object.getInt("count"), object.getString
-                    ("parent_id"), object.getJSONArray("children"));
+            comments = new UnloadedComments(object.getString("name"), object.getInt("count"), object.getJSONArray
+                    ("children"));
             Log.i(TAG, "generateUnloadedComments: " + object.toString());
             return comments;
         } catch (JSONException e) {
@@ -152,6 +154,11 @@ public class Util {
                     activity.startActivity(intent);
                 }
             } else {
+                if (Pattern.matches("/?(r|u)/.*", url)) {
+                    url = "https://www.reddit.com" + (url.startsWith("/") ? "" : "/") + url;
+                    linkClicked(activity, url, false);
+                    return;
+                }
                 loadThroughBrowser(activity, url);
             }
         }

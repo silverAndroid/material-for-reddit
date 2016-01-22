@@ -215,11 +215,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void getSubreddits(final boolean loadFirstSubreddit) {
+        Log.d(TAG, "getSubreddits: running");
         String accessToken = Authentication.getInstance().getAccessToken();
         AsyncHttpClient subredditLoader = new AsyncHttpClient();
         subredditLoader.setUserAgent(ConstantMap.getInstance().getUserAgent());
         subredditLoader.addHeader("Authorization", "bearer " + accessToken);
-        subredditLoader.get(accessToken.isEmpty() ? "https://www.reddit.com/subreddits/default/.json?limit=50" :
+        subredditLoader.get(accessToken.isEmpty() ? "https://www.reddit.com/subreddits/default/.json" :
                 "https://oauth.reddit.com/subreddits/mine/.json", new JsonHttpResponseHandler() {
 
             @Override
@@ -270,8 +271,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
             @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.e(TAG, "onFailure: " + this.getRequestURI() + ", " + responseString, throwable);
+            }
+
+            @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                Log.e(TAG, "onFailure: " + errorResponse.toString(), throwable);
                 if (errorResponse.has("error")) {
                     Authentication.getInstance().refreshAccessToken();
                 }
@@ -286,7 +291,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         subredditLoader.addHeader("Authorization", "bearer " + accessToken);
         RequestParams params = new RequestParams();
         params.put("after", afterID);
-        subredditLoader.get("https://oauth.reddit.com/subreddits/mine/.json", params, new JsonHttpResponseHandler() {
+        subredditLoader.get(accessToken.isEmpty() ? "https://www.reddit.com/subreddits/default/.json" :
+                "https://oauth.reddit.com/subreddits/mine/.json", params, new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {

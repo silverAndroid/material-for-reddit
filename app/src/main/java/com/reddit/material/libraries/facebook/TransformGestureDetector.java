@@ -16,7 +16,7 @@ import android.view.MotionEvent;
 
 /**
  * Component that detects translation, scale and rotation based on touch events.
- * <p>
+ * <p/>
  * This class notifies its listeners whenever a gesture begins, updates or ends.
  * The instance of this detector is passed to the listeners, so it can be queried
  * for pivot, translation, scale or rotation.

@@ -9,8 +9,8 @@ public class UnloadedComments extends Comment {
 
     private final int count;
 
-    public UnloadedComments(String id, int count, String parentID, JSONArray children) {
-        super(id, parentID);
+    public UnloadedComments(String id, int count, JSONArray children) {
+        super(id);
         setReplies(children);
         this.count = count;
     }

@@ -26,10 +26,10 @@ public class NormalComment extends Comment implements VotingHelper {
     private int score;
     private int gilded;
 
-    public NormalComment(String id, String parentID, String subredditID, String linkID, boolean saved, int gilded,
-                         boolean archived, String author, int score, String bodyHTML, double edited, boolean
-                                 scoreHidden, long createdUTC, String authorFlairText, int vote) {
-        super(id, parentID);
+    public NormalComment(String id, String subredditID, String linkID, boolean saved, int gilded, boolean archived,
+                         String author, int score, String bodyHTML, double edited, boolean scoreHidden, long
+                                 createdUTC, String authorFlairText, int vote) {
+        super(id);
         this.subredditID = subredditID;
         this.linkID = linkID;
         this.saved = saved;

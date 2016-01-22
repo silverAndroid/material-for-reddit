@@ -69,10 +69,6 @@ public class ConstantMap {
         return USER_AGENT;
     }
 
-    public HashMap<String, String> getConstantMap() {
-        return constantMap;
-    }
-
     public String getConstant(String key) {
         return constantMap.get(key);
     }
