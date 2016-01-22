@@ -7,13 +7,11 @@ import org.json.JSONArray;
  */
 public class Comment extends Thing {
 
-    private String parentID;
+    private Comment parent;
     private JSONArray replies;
-    private int depth;
 
-    public Comment(String id, String parentID) {
+    public Comment(String id) {
         super(id);
-        this.parentID = parentID;
     }
 
     public JSONArray getReplies() {
@@ -24,15 +22,25 @@ public class Comment extends Thing {
         this.replies = replies;
     }
 
-    public String getParentID() {
-        return parentID;
+    public Comment getParent() {
+        return parent;
+    }
+
+    public void setParent(Comment parent) {
+        this.parent = parent;
     }
 
     public int getDepth() {
-        return depth;
+        return parent == null ? 0 : parent.getDepth() + 1;
     }
 
-    public void setDepth(int depth) {
-        this.depth = depth;
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Comment) {
+            Comment comment = (Comment) o;
+            if (comment.getID().equals(getID()))
+                return true;
+        }
+        return false;
     }
 }
