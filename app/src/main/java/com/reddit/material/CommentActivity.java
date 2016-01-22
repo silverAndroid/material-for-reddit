@@ -120,7 +120,6 @@ public class CommentActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject
                             errorResponse) {
-                        Log.e(TAG, "onFailure: " + errorResponse.toString(), throwable);
                         Log.d(TAG, "onFailure: " + this.getRequestURI().toString());
                     }
 
