@@ -34,7 +34,6 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.crashlytics.android.Crashlytics;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.loopj.android.http.AsyncHttpClient;
@@ -54,7 +53,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 
 import cz.msebera.android.httpclient.Header;
-import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 

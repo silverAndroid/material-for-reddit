@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
-import android.os.PatternMatcher;
 import android.support.customtabs.CustomTabsIntent;
 import android.util.Log;
 
